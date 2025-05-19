@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { hslToHex, hslToRgb } from '@/lib/colorUtils';
 import ColorSquare from './ColorSquare';
 import ColorValues from './ColorValues';
 import ColorPreview from './ColorPreview';
@@ -28,6 +29,14 @@ const ColorPicker = () => {
     hsl: { h: 0, s: 0, l: 0 }
   });
   const initialColorRef = useRef<Color>(color);
+  const [isFirstSelection, setIsFirstSelection] = useState(true);
+  
+  useEffect(() => {
+    if (isFirstSelection && (color.hsl.s > 0 || color.hsl.l > 0)) {
+      initialColorRef.current = { ...color };
+      setIsFirstSelection(false);
+    }
+  }, [color, isFirstSelection]);
 
   // 色相スライダーでhueのみ更新
   const handleHueChange = (newColor: Color) => {
@@ -60,7 +69,6 @@ const ColorPicker = () => {
           <ColorSlider
             hue={color.hsl.h}
             onColorChange={handleHueChange}
-            value={{ s: color.hsl.s, l: color.hsl.l }}
           />
         </div>
         <ColorValues color={color} />
@@ -84,22 +92,5 @@ const ColorPicker = () => {
   );
 };
 
-// HSL→HEX/RGB変換関数
-function hslToHex(h: number, s: number, l: number): string {
-  const rgb = hslToRgb(h, s, l);
-  return `#${rgb.r.toString(16).padStart(2, '0')}${rgb.g.toString(16).padStart(2, '0')}${rgb.b.toString(16).padStart(2, '0')}`;
-}
-function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-  s /= 100;
-  l /= 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return {
-    r: Math.round(255 * f(0)),
-    g: Math.round(255 * f(8)),
-    b: Math.round(255 * f(4))
-  };
-}
 
-export default ColorPicker; 
+export default ColorPicker;        

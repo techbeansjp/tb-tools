@@ -9,8 +9,12 @@ interface ColorValuesProps {
 }
 
 const ColorValues = ({ color }: ColorValuesProps) => {
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error('クリップボードへのコピーに失敗しました:', err);
+    }
   };
 
   return (
@@ -75,4 +79,4 @@ const ColorValues = ({ color }: ColorValuesProps) => {
   );
 };
 
-export default ColorValues; 
+export default ColorValues;  

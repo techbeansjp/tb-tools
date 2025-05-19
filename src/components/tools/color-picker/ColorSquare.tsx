@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
+import { hslToHex, hslToRgb } from '@/lib/colorUtils';
 
 interface ColorSquareProps {
   hue: number;
@@ -78,6 +79,30 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
       window.removeEventListener('mouseup', handleUp);
     };
   }, [isDragging, hue, onChange]);
+  
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      const { s, l } = getRelativeCoords(touch.clientX, touch.clientY);
+      const hex = hslToHex(hue, s, l);
+      const rgb = hslToRgb(hue, s, l);
+      onChange({ h: hue, s, l, hex, rgb });
+    };
+    
+    const handleTouchEnd = () => setIsDragging(false);
+    
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('touchcancel', handleTouchEnd);
+    
+    return () => {
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+    };
+  }, [isDragging, hue, onChange]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsDragging(true);
@@ -104,27 +129,30 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
         className="w-full max-w-[300px] h-auto cursor-crosshair"
         onMouseDown={handleMouseDown}
         onClick={handleClick}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+          const touch = e.touches[0];
+          const { s, l } = getRelativeCoords(touch.clientX, touch.clientY);
+          const hex = hslToHex(hue, s, l);
+          const rgb = hslToRgb(hue, s, l);
+          onChange({ h: hue, s, l, hex, rgb });
+        }}
+        onTouchMove={(e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+          const touch = e.touches[0];
+          const { s, l } = getRelativeCoords(touch.clientX, touch.clientY);
+          const hex = hslToHex(hue, s, l);
+          const rgb = hslToRgb(hue, s, l);
+          onChange({ h: hue, s, l, hex, rgb });
+        }}
+        onTouchEnd={() => setIsDragging(false)}
+        onTouchCancel={() => setIsDragging(false)}
       />
     </div>
   );
 };
 
-function hslToHex(h: number, s: number, l: number): string {
-  const rgb = hslToRgb(h, s, l);
-  return `#${rgb.r.toString(16).padStart(2, '0')}${rgb.g.toString(16).padStart(2, '0')}${rgb.b.toString(16).padStart(2, '0')}`;
-}
 
-function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-  s /= 100;
-  l /= 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return {
-    r: Math.round(255 * f(0)),
-    g: Math.round(255 * f(8)),
-    b: Math.round(255 * f(4))
-  };
-}
-
-export default ColorSquare; 
+export default ColorSquare;        

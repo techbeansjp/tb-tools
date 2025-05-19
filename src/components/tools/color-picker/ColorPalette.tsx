@@ -1,5 +1,7 @@
 'use client';
 
+import { hslToHex, hslToRgb } from '@/lib/colorUtils';
+
 interface ColorPaletteProps {
   baseColor: {
     hex: string;
@@ -27,20 +29,6 @@ const ColorPalette = ({ baseColor, onColorSelect }: ColorPaletteProps) => {
     ];
   };
 
-  const hslToHex = (h: number, s: number, l: number): string => {
-    s /= 100;
-    l /= 100;
-
-    const k = (n: number) => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-    const r = Math.round(255 * f(0));
-    const g = Math.round(255 * f(8));
-    const b = Math.round(255 * f(4));
-
-    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-  };
 
   const handleSelect = (h: number, s: number, l: number) => {
     const hex = hslToHex(h, s, l);
@@ -73,11 +61,29 @@ const ColorPalette = ({ baseColor, onColorSelect }: ColorPaletteProps) => {
               className="w-16 h-16 rounded-lg cursor-pointer"
               style={{ backgroundColor: baseColor.hex }}
               onClick={() => handleSelect(baseColor.hsl.h, baseColor.hsl.s, baseColor.hsl.l)}
+              role="button"
+              aria-label={`ベースカラー: ${baseColor.hex}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect(baseColor.hsl.h, baseColor.hsl.s, baseColor.hsl.l);
+                }
+              }}
             />
             <div
               className="w-16 h-16 rounded-lg cursor-pointer"
               style={{ backgroundColor: hslToHex(complementaryHue, baseColor.hsl.s, baseColor.hsl.l) }}
               onClick={() => handleSelect(complementaryHue, baseColor.hsl.s, baseColor.hsl.l)}
+              role="button"
+              aria-label={`補色: ${hslToHex(complementaryHue, baseColor.hsl.s, baseColor.hsl.l)}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect(complementaryHue, baseColor.hsl.s, baseColor.hsl.l);
+                }
+              }}
             />
           </div>
         </div>
@@ -89,16 +95,43 @@ const ColorPalette = ({ baseColor, onColorSelect }: ColorPaletteProps) => {
               className="w-16 h-16 rounded-lg cursor-pointer"
               style={{ backgroundColor: hslToHex(analogousHues[0], baseColor.hsl.s, baseColor.hsl.l) }}
               onClick={() => handleSelect(analogousHues[0], baseColor.hsl.s, baseColor.hsl.l)}
+              role="button"
+              aria-label={`類似色1: ${hslToHex(analogousHues[0], baseColor.hsl.s, baseColor.hsl.l)}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect(analogousHues[0], baseColor.hsl.s, baseColor.hsl.l);
+                }
+              }}
             />
             <div
               className="w-16 h-16 rounded-lg cursor-pointer"
               style={{ backgroundColor: baseColor.hex }}
               onClick={() => handleSelect(baseColor.hsl.h, baseColor.hsl.s, baseColor.hsl.l)}
+              role="button"
+              aria-label={`ベースカラー: ${baseColor.hex}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect(baseColor.hsl.h, baseColor.hsl.s, baseColor.hsl.l);
+                }
+              }}
             />
             <div
               className="w-16 h-16 rounded-lg cursor-pointer"
               style={{ backgroundColor: hslToHex(analogousHues[1], baseColor.hsl.s, baseColor.hsl.l) }}
               onClick={() => handleSelect(analogousHues[1], baseColor.hsl.s, baseColor.hsl.l)}
+              role="button"
+              aria-label={`類似色2: ${hslToHex(analogousHues[1], baseColor.hsl.s, baseColor.hsl.l)}`}
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleSelect(analogousHues[1], baseColor.hsl.s, baseColor.hsl.l);
+                }
+              }}
             />
           </div>
         </div>
@@ -112,6 +145,15 @@ const ColorPalette = ({ baseColor, onColorSelect }: ColorPaletteProps) => {
                 className="w-16 h-16 rounded-lg cursor-pointer"
                 style={{ backgroundColor: hslToHex(color.h, color.s, color.l) }}
                 onClick={() => handleSelect(color.h, color.s, color.l)}
+                role="button"
+                aria-label={`モノクローム${index + 1}: ${hslToHex(color.h, color.s, color.l)}`}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleSelect(color.h, color.s, color.l);
+                  }
+                }}
               />
             ))}
           </div>
@@ -121,17 +163,5 @@ const ColorPalette = ({ baseColor, onColorSelect }: ColorPaletteProps) => {
   );
 };
 
-function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
-  s /= 100;
-  l /= 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return {
-    r: Math.round(255 * f(0)),
-    g: Math.round(255 * f(8)),
-    b: Math.round(255 * f(4))
-  };
-}
 
-export default ColorPalette; 
+export default ColorPalette;            
