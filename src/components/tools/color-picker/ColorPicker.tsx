@@ -79,18 +79,22 @@ const ColorPicker = () => {
       </div>
       <div className="bg-[#161b22] rounded-xl p-6 shadow-md border border-gray-800 max-w-md mx-auto">
         <h2 className="text-lg font-semibold mb-4 text-gray-200">最初に選択した色</h2>
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-lg border border-gray-700" style={{ backgroundColor: initialColorRef.current.hex }} />
-          <div>
-            <div className="text-sm text-gray-400">HEX: <span className="text-gray-200">{initialColorRef.current.hex}</span></div>
-            <div className="text-sm text-gray-400">RGB: <span className="text-gray-200">rgb({initialColorRef.current.rgb.r}, {initialColorRef.current.rgb.g}, {initialColorRef.current.rgb.b})</span></div>
-            <div className="text-sm text-gray-400">HSL: <span className="text-gray-200">hsl({Math.round(initialColorRef.current.hsl.h)}, {Math.round(initialColorRef.current.hsl.s)}%, {Math.round(initialColorRef.current.hsl.l)}%)</span></div>
+        {!isFirstSelection ? (
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-lg border border-gray-700" style={{ backgroundColor: initialColorRef.current.hex }} />
+            <div>
+              <div className="text-sm text-gray-400">HEX: <span className="text-gray-200">{initialColorRef.current.hex}</span></div>
+              <div className="text-sm text-gray-400">RGB: <span className="text-gray-200">rgb({initialColorRef.current.rgb.r}, {initialColorRef.current.rgb.g}, {initialColorRef.current.rgb.b})</span></div>
+              <div className="text-sm text-gray-400">HSL: <span className="text-gray-200">hsl({Math.round(initialColorRef.current.hsl.h)}, {Math.round(initialColorRef.current.hsl.s)}%, {Math.round(initialColorRef.current.hsl.l)}%)</span></div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-gray-400">まだ色が選択されていません</div>
+        )}
       </div>
     </div>
   );
 };
 
 
-export default ColorPicker;        
+export default ColorPicker;          
