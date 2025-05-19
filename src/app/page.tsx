@@ -1,5 +1,6 @@
 import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import Link from 'next/link';
 
 export default function Home() {
   return (
@@ -13,33 +14,37 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-6">プロジェクト進捗状況</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Card className="bg-[#161b22] border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">カラーピッカー</CardTitle>
-              <CardDescription className="text-gray-400">実装完了</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside text-gray-300 space-y-2">
-                <li>カラーホイール、カラースクエア、スライダーによる直感的な色選択</li>
-                <li>RGB、HSL、HEXなど複数の形式での色情報表示</li>
-                <li>カラーパレットによる色の保存と管理</li>
-              </ul>
-            </CardContent>
-          </Card>
+          <Link href="/tools/color-picker" className="block">
+            <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">カラーピッカー</CardTitle>
+                <CardDescription className="text-gray-400">実装完了</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc list-inside text-gray-300 space-y-2">
+                  <li>カラーホイール、カラースクエア、スライダーによる直感的な色選択</li>
+                  <li>RGB、HSL、HEXなど複数の形式での色情報表示</li>
+                  <li>カラーパレットによる色の保存と管理</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-[#161b22] border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">JSON整形・検証</CardTitle>
-              <CardDescription className="text-gray-400">実装完了</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ul className="list-disc list-inside text-gray-300 space-y-2">
-                <li>JSONデータの整形と検証機能</li>
-                <li>インデントサイズの調整（2/4/8スペース）</li>
-                <li>整形されたJSONのコピー機能とフィードバック表示</li>
-              </ul>
-            </CardContent>
-          </Card>
+          <Link href="/tools/json-formatter" className="block">
+            <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">JSON整形・検証</CardTitle>
+                <CardDescription className="text-gray-400">実装完了</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc list-inside text-gray-300 space-y-2">
+                  <li>JSONデータの整形と検証機能</li>
+                  <li>インデントサイズの調整（2/4/8スペース）</li>
+                  <li>整形されたJSONのコピー機能とフィードバック表示</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <Card className="bg-[#161b22] border-gray-800 mb-8">

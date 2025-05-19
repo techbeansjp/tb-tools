@@ -87,7 +87,26 @@ const ColorWheel = ({ onColorChange, value }: ColorWheelProps) => {
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-
+    
+    updateColorFromCoordinates(x, y);
+  };
+  
+  const handleTouchEvent = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+    
+    updateColorFromCoordinates(x, y);
+  };
+  
+  const updateColorFromCoordinates = (x: number, y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const centerX = canvas.width / 2;
     const centerY = canvas.height / 2;
     const radius = Math.min(centerX, centerY) - 10;
@@ -143,9 +162,21 @@ const ColorWheel = ({ onColorChange, value }: ColorWheelProps) => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+          handleTouchEvent(e);
+        }}
+        onTouchMove={(e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+          handleTouchEvent(e);
+        }}
+        onTouchEnd={() => setIsDragging(false)}
+        onTouchCancel={() => setIsDragging(false)}
       />
     </div>
   );
 };
 
-export default ColorWheel; 
+export default ColorWheel;                

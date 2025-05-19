@@ -38,11 +38,20 @@ export const JsonFormatter: React.FC = () => {
   const formatJson = () => {
     try {
       const parsed = JSON.parse(jsonInput);
+      
+      const sortedData = formatOptions.sortKeys 
+        ? sortObjectKeys(parsed) 
+        : parsed;
+      
+      const indentChar = formatOptions.useTabs ? '\t' : ' ';
+      const indentSize = formatOptions.useTabs ? 1 : formatOptions.indentSize;
+      
       const formatted = JSON.stringify(
-        parsed,
+        sortedData,
         null,
-        formatOptions.compact ? 0 : formatOptions.indentSize
+        formatOptions.compact ? 0 : indentSize
       );
+      
       setFormattedJson(formatted);
       setErrors([]);
     } catch (error) {
@@ -55,6 +64,23 @@ export const JsonFormatter: React.FC = () => {
         }]);
       }
     }
+  };
+  
+  const sortObjectKeys = (obj: any): any => {
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+    
+    if (Array.isArray(obj)) {
+      return obj.map(sortObjectKeys);
+    }
+    
+    return Object.keys(obj)
+      .sort()
+      .reduce<Record<string, any>>((result, key) => {
+        result[key] = sortObjectKeys(obj[key]);
+        return result;
+      }, {});
   };
 
   const handleCopy = () => {
@@ -83,7 +109,7 @@ export const JsonFormatter: React.FC = () => {
                 height="400px"
                 defaultLanguage="json"
                 value={jsonInput}
-                onChange={(value) => setJsonInput(value || '')}
+                onChange={(value: string | undefined) => setJsonInput(value || '')}
                 onMount={handleEditorMount}
                 options={{
                   minimap: { enabled: false },
@@ -122,7 +148,7 @@ export const JsonFormatter: React.FC = () => {
                 <Label className="text-gray-300">インデントサイズ</Label>
                 <Select
                   value={formatOptions.indentSize.toString()}
-                  onValueChange={(value) => setFormatOptions(prev => ({ ...prev, indentSize: parseInt(value) }))}
+                  onValueChange={(value: string) => setFormatOptions(prev => ({ ...prev, indentSize: parseInt(value) }))}
                 >
                   <SelectTrigger className="w-[120px] bg-[#21262d] border-gray-600 text-gray-200">
                     <SelectValue />
@@ -138,7 +164,7 @@ export const JsonFormatter: React.FC = () => {
                 <Label className="text-gray-300 font-semibold">タブ使用</Label>
                 <Switch
                   checked={formatOptions.useTabs}
-                  onCheckedChange={(checked) => setFormatOptions(prev => ({ ...prev, useTabs: checked }))}
+                  onCheckedChange={(checked: boolean) => setFormatOptions(prev => ({ ...prev, useTabs: checked }))}
                   className="w-10 h-6 border border-gray-400 data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-400 transition-colors duration-200"
                 />
               </div>
@@ -147,7 +173,7 @@ export const JsonFormatter: React.FC = () => {
                 <Label className="text-gray-300 font-semibold">キーをソート</Label>
                 <Switch
                   checked={formatOptions.sortKeys}
-                  onCheckedChange={(checked) => setFormatOptions(prev => ({ ...prev, sortKeys: checked }))}
+                  onCheckedChange={(checked: boolean) => setFormatOptions(prev => ({ ...prev, sortKeys: checked }))}
                   className="w-10 h-6 border border-gray-400 data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-400 transition-colors duration-200"
                 />
               </div>
@@ -156,7 +182,7 @@ export const JsonFormatter: React.FC = () => {
                 <Label className="text-gray-300 font-semibold">圧縮形式</Label>
                 <Switch
                   checked={formatOptions.compact}
-                  onCheckedChange={(checked) => setFormatOptions(prev => ({ ...prev, compact: checked }))}
+                  onCheckedChange={(checked: boolean) => setFormatOptions(prev => ({ ...prev, compact: checked }))}
                   className="w-10 h-6 border border-gray-400 data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-gray-400 transition-colors duration-200"
                 />
               </div>
@@ -171,7 +197,6 @@ export const JsonFormatter: React.FC = () => {
               整形
             </Button>
             <Button 
-              variant="outline" 
               onClick={handleCopy}
               className="border-gray-600 text-white bg-[#21262d] hover:bg-[#30363d] min-w-[120px]"
             >
@@ -192,4 +217,4 @@ export const JsonFormatter: React.FC = () => {
       </Card>
     </div>
   );
-}; 
+};              

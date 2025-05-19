@@ -48,7 +48,7 @@ const Sidebar = () => {
         }
       }
     }
-  }, [pathname]);
+  }, [pathname, menuItems]);
 
   return (
     <aside className="w-64 bg-[#161b22] border-r border-gray-800 min-h-[calc(100vh-64px)]">
@@ -67,6 +67,8 @@ const Sidebar = () => {
               <button
                 className="w-full px-4 py-2 text-left text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md flex items-center justify-between"
                 onClick={() => setActiveMenu(activeMenu === category ? null : category)}
+                aria-expanded={activeMenu === category}
+                aria-controls={`menu-${category}`}
               >
                 <span>{category}</span>
                 <svg
@@ -76,6 +78,7 @@ const Sidebar = () => {
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path
                     strokeLinecap="round"
@@ -86,7 +89,7 @@ const Sidebar = () => {
                 </svg>
               </button>
               {activeMenu === category && (
-                <ul className="mt-2 ml-4 space-y-1">
+                <ul id={`menu-${category}`} className="mt-2 ml-4 space-y-1">
                   {items.map((item) => {
                     const isActive = pathname === item.href;
                     return (
@@ -114,4 +117,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar; 
+export default Sidebar;        

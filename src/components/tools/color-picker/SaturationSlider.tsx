@@ -60,8 +60,7 @@ const SaturationSlider = ({ hue, lightness, saturation, onChange }: SaturationSl
     };
   }, [isDragging, onChange]);
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    setIsDragging(true);
+  const handleMouseEvent = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -69,14 +68,24 @@ const SaturationSlider = ({ hue, lightness, saturation, onChange }: SaturationSl
     const s = (x / canvas.width) * 100;
     onChange(s);
   };
-
-  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  
+  const handleTouchEvent = (e: React.TouchEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, canvas.width));
+    const touch = e.touches[0];
+    const x = Math.max(0, Math.min(touch.clientX - rect.left, canvas.width));
     const s = (x / canvas.width) * 100;
     onChange(s);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    setIsDragging(true);
+    handleMouseEvent(e);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    handleMouseEvent(e);
   };
 
   return (
@@ -89,9 +98,21 @@ const SaturationSlider = ({ hue, lightness, saturation, onChange }: SaturationSl
         className="w-full max-w-[240px] h-8 cursor-pointer"
         onMouseDown={handleMouseDown}
         onClick={handleClick}
+        onTouchStart={(e) => {
+          e.preventDefault();
+          setIsDragging(true);
+          handleTouchEvent(e);
+        }}
+        onTouchMove={(e) => {
+          if (!isDragging) return;
+          e.preventDefault();
+          handleTouchEvent(e);
+        }}
+        onTouchEnd={() => setIsDragging(false)}
+        onTouchCancel={() => setIsDragging(false)}
       />
     </div>
   );
 };
 
-export default SaturationSlider; 
+export default SaturationSlider;              

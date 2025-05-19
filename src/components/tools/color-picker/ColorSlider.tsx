@@ -75,6 +75,25 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
 
     const rect = canvas.getBoundingClientRect();
     const y = e.clientY - rect.top;
+    
+    updateColorFromCoordinates(y);
+  };
+  
+  const handleTouchEvent = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    const y = touch.clientY - rect.top;
+    
+    updateColorFromCoordinates(y);
+  };
+  
+  const updateColorFromCoordinates = (y: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
     const height = canvas.height;
 
     // 色相の計算（0-360）
@@ -123,10 +142,22 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            setIsDragging(true);
+            handleTouchEvent(e);
+          }}
+          onTouchMove={(e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            handleTouchEvent(e);
+          }}
+          onTouchEnd={() => setIsDragging(false)}
+          onTouchCancel={() => setIsDragging(false)}
         />
       </div>
     </div>
   );
 };
 
-export default ColorSlider; 
+export default ColorSlider;    
