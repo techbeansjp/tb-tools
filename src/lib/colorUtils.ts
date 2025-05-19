@@ -1,7 +1,20 @@
 /**
+ * Validates HSL color values and returns normalized values
+ */
+export function validateHslValue(h: number, s: number, l: number): [number, number, number] {
+  const validH = ((h % 360) + 360) % 360;
+  const validS = Math.max(0, Math.min(100, s));
+  const validL = Math.max(0, Math.min(100, l));
+  
+  return [validH, validS, validL];
+}
+
+/**
  * Converts HSL color values to RGB color values
  */
 export function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+  [h, s, l] = validateHslValue(h, s, l);
+  
   s /= 100;
   l /= 100;
   
