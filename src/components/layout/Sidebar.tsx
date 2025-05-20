@@ -12,7 +12,7 @@ const Sidebar = () => {
     '開発支援ツール': [
       { name: 'カラーピッカー', href: '/tools/color-picker' },
       { name: 'JSON整形・検証', href: '/tools/json-formatter' },
-      { name: 'エンコード/デコード', href: '#' },
+      { name: 'エンコード/デコード', href: '/tools/encoder-decoder' },
       { name: 'HTML整形', href: '/tools/html-formatter' }
     ],
     'テキスト処理ツール': [
