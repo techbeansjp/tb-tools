@@ -45,6 +45,22 @@ export default function Home() {
               </CardContent>
             </Card>
           </Link>
+
+          <Link href="/tools/html-formatter" className="block">
+            <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
+              <CardHeader>
+                <CardTitle className="text-xl text-white">HTML整形</CardTitle>
+                <CardDescription className="text-gray-400">実装完了</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ul className="list-disc list-inside text-gray-300 space-y-2">
+                  <li>HTMLソースの整形機能</li>
+                  <li>インデントの自動調整</li>
+                  <li>整形されたHTMLのコピー機能</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         <Card className="bg-[#161b22] border-gray-800 mb-8">
@@ -55,9 +71,6 @@ export default function Home() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               <div className="p-4 bg-[#21262d] rounded-lg">
                 <p className="font-medium text-gray-200">エンコード/デコード</p>
-              </div>
-              <div className="p-4 bg-[#21262d] rounded-lg">
-                <p className="font-medium text-gray-200">HTML整形</p>
               </div>
               <div className="p-4 bg-[#21262d] rounded-lg">
                 <p className="font-medium text-gray-200">テキスト変換</p>
