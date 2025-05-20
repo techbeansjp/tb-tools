@@ -65,18 +65,30 @@ export const EncoderDecoder: React.FC = () => {
       name: 'HTMLエンティティ',
       encode: (text) => {
         try {
-          const el = document.createElement('div');
-          el.innerText = text;
-          return el.innerHTML;
+          return text.replace(/[&<>"']/g, (match) => {
+            const entities: Record<string, string> = {
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#39;'
+            };
+            return entities[match];
+          });
         } catch {
           throw new Error('HTMLエンティティエンコードに失敗しました');
         }
       },
       decode: (text) => {
         try {
-          const el = document.createElement('div');
-          el.innerHTML = text;
-          return el.innerText;
+          return text
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+            .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)));
         } catch {
           throw new Error('HTMLエンティティデコードに失敗しました');
         }
@@ -94,7 +106,8 @@ export const EncoderDecoder: React.FC = () => {
       },
       decode: (text) => {
         try {
-          return JSON.parse(`"${text}"`);
+          const jsonStr = `"${text.replace(/"/g, '\\"')}"`.replace(/\\\\"/g, '\\"');
+          return JSON.parse(jsonStr);
         } catch {
           throw new Error('JSONアンエスケープに失敗しました');
         }
@@ -124,11 +137,22 @@ export const EncoderDecoder: React.FC = () => {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(outputText);
-    setCopyButtonText('コピーしました！');
-    setTimeout(() => {
-      setCopyButtonText('コピー');
-    }, 2000);
+    if (!navigator.clipboard) {
+      setError('このブラウザはクリップボードAPIをサポートしていません。');
+      return;
+    }
+    
+    navigator.clipboard.writeText(outputText)
+      .then(() => {
+        setCopyButtonText('コピーしました！');
+        setTimeout(() => {
+          setCopyButtonText('コピー');
+        }, 2000);
+      })
+      .catch(err => {
+        console.error('クリップボードへのコピーに失敗しました:', err);
+        setError('クリップボードへのコピーに失敗しました。ブラウザの設定を確認してください。');
+      });
   };
 
   const handleSwap = () => {
@@ -156,7 +180,7 @@ export const EncoderDecoder: React.FC = () => {
               <Label className="text-gray-300 mb-2 block">エンコード方式</Label>
               <Select
                 value={encodingType}
-                onValueChange={(value) => setEncodingType(value as EncodingType)}
+                onValueChange={(value: string) => setEncodingType(value as EncodingType)}
               >
                 <SelectTrigger className="w-full bg-[#21262d] border-gray-600 text-gray-200">
                   <SelectValue />
@@ -178,20 +202,18 @@ export const EncoderDecoder: React.FC = () => {
             <div className="w-full md:w-1/3 flex justify-center">
               <div className="flex items-center space-x-4">
                 <Button
-                  variant={mode === 'encode' ? 'default' : 'outline'}
                   onClick={() => setMode('encode')}
                   className={mode === 'encode' 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                    : 'border-gray-600 text-gray-300 hover:bg-[#30363d]'}
+                    ? 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 py-2' 
+                    : 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-gray-600 text-gray-300 hover:bg-[#30363d] h-9 px-4 py-2'}
                 >
                   エンコード
                 </Button>
                 <Button
-                  variant={mode === 'decode' ? 'default' : 'outline'}
                   onClick={() => setMode('decode')}
                   className={mode === 'decode' 
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                    : 'border-gray-600 text-gray-300 hover:bg-[#30363d]'}
+                    ? 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white h-9 px-4 py-2' 
+                    : 'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-gray-600 text-gray-300 hover:bg-[#30363d] h-9 px-4 py-2'}
                 >
                   デコード
                 </Button>
@@ -200,9 +222,8 @@ export const EncoderDecoder: React.FC = () => {
 
             <div className="w-full md:w-1/3 flex justify-end">
               <Button
-                variant="outline"
                 onClick={handleSwap}
-                className="border-gray-600 text-gray-300 hover:bg-[#30363d]"
+                className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-gray-600 text-gray-300 hover:bg-[#30363d] h-9 px-4 py-2"
               >
                 入力と出力を入れ替え
               </Button>
@@ -225,10 +246,9 @@ export const EncoderDecoder: React.FC = () => {
               <div className="flex justify-between items-center h-10">
                 <Label className="text-gray-300">出力テキスト</Label>
                 <Button
-                  variant="outline"
                   onClick={handleCopy}
                   disabled={!outputText}
-                  className="border-gray-600 text-white bg-[#21262d] hover:bg-[#30363d] min-w-[120px]"
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-gray-600 text-white bg-[#21262d] hover:bg-[#30363d] min-w-[120px] h-9 px-4 py-2"
                 >
                   {copyButtonText}
                 </Button>
