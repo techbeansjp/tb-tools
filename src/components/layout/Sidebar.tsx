@@ -30,7 +30,7 @@ const Sidebar = () => {
     ],
     'セキュリティツール': [
       { name: 'パスワード生成', href: '/tools/password-generator' },
-      { name: 'ハッシュ生成', href: '#' }
+      { name: 'ハッシュ生成', href: '/tools/hash-generator' }
     ],
     'ネットワークツール': [
       { name: 'IP確認', href: '#' },
@@ -117,4 +117,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;                
+export default Sidebar;                                
