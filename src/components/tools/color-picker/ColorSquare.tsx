@@ -13,6 +13,7 @@ interface ColorSquareProps {
 const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,12 +56,51 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
   const getRelativeCoords = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { s: saturation, l: lightness };
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, canvas.width));
-    const y = Math.max(0, Math.min(clientY - rect.top, canvas.height));
-    const s = (x / canvas.width) * 100;
-    const l = 100 - (y / canvas.height) * 100;
-    return { s, l };
+    
+    try {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(clientX - rect.left, canvas.width));
+      const y = Math.max(0, Math.min(clientY - rect.top, canvas.height));
+      const s = Math.max(0, Math.min(100, (x / canvas.width) * 100));
+      const l = Math.max(0, Math.min(100, 100 - (y / canvas.height) * 100));
+      return { s, l };
+    } catch (error) {
+      console.error('座標計算中にエラーが発生しました:', error);
+      return { s: saturation, l: lightness };
+    }
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+    if (!isFocused) return;
+    
+    const step = e.shiftKey ? 10 : 1;
+    let newS = saturation;
+    let newL = lightness;
+    
+    switch (e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        newS = Math.max(0, saturation - step);
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        newS = Math.min(100, saturation + step);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        newL = Math.min(100, lightness + step);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        newL = Math.max(0, lightness - step);
+        break;
+      default:
+        return;
+    }
+    
+    const hex = hslToHex(hue, newS, newL);
+    const rgb = hslToRgb(hue, newS, newL);
+    onChange({ h: hue, s: newS, l: newL, hex, rgb });
   };
 
   useEffect(() => {
@@ -126,9 +166,19 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
         ref={canvasRef}
         width={300}
         height={300}
-        className="w-full max-w-[300px] h-auto cursor-crosshair"
+        className={`w-full max-w-[300px] h-auto cursor-crosshair ${isFocused ? 'ring-2 ring-blue-500' : ''}`}
+        tabIndex={0}
+        role="slider"
+        aria-label="彩度と明度の選択"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(saturation)}
+        aria-valuetext={`彩度: ${Math.round(saturation)}%, 明度: ${Math.round(lightness)}%`}
         onMouseDown={handleMouseDown}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onTouchStart={(e) => {
           e.preventDefault();
           setIsDragging(true);

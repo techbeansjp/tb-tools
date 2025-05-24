@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { hslToHex, hslToRgb } from '@/lib/colorUtils';
 
 interface ColorSliderProps {
   hue: number;
@@ -14,6 +15,7 @@ interface ColorSliderProps {
 const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -94,39 +96,58 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const height = canvas.height;
+    try {
+      const height = canvas.height;
+      
+      // 境界チェックを追加
+      const clampedY = Math.max(0, Math.min(height, y));
+      
+      // 色相の計算（0-360）
+      const newHue = Math.max(0, Math.min(360, (1 - clampedY / height) * 360));
 
-    // 色相の計算（0-360）
-    const newHue = Math.max(0, Math.min(360, (1 - y / height) * 360));
+      const color = {
+        hex: hslToHex(newHue, 100, 50),
+        rgb: hslToRgb(newHue, 100, 50),
+        hsl: { h: newHue, s: 100, l: 50 }
+      };
 
+      onColorChange(color);
+    } catch (error) {
+      console.error('色の更新中にエラーが発生しました:', error);
+    }
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+    if (!isFocused) return;
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const step = e.shiftKey ? 10 : 1;
+    let newHue = hue;
+    
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault();
+        newHue = Math.min(360, hue + step);
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        newHue = Math.max(0, hue - step);
+        break;
+      default:
+        return;
+    }
+    
     const color = {
       hex: hslToHex(newHue, 100, 50),
       rgb: hslToRgb(newHue, 100, 50),
       hsl: { h: newHue, s: 100, l: 50 }
     };
-
+    
     onColorChange(color);
   };
 
-  const hslToHex = (h: number, s: number, l: number): string => {
-    const rgb = hslToRgb(h, s, l);
-    return `#${rgb.r.toString(16).padStart(2, '0')}${rgb.g.toString(16).padStart(2, '0')}${rgb.b.toString(16).padStart(2, '0')}`;
-  };
-
-  const hslToRgb = (h: number, s: number, l: number): { r: number; g: number; b: number } => {
-    s /= 100;
-    l /= 100;
-
-    const k = (n: number) => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-    return {
-      r: Math.round(255 * f(0)),
-      g: Math.round(255 * f(8)),
-      b: Math.round(255 * f(4))
-    };
-  };
 
   return (
     <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800">
@@ -137,11 +158,21 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
           width={40}
           height={300}
           style={{ width: 40, height: 300 }}
-          className="cursor-crosshair"
+          className={`cursor-crosshair ${isFocused ? 'ring-2 ring-blue-500' : ''}`}
+          tabIndex={0}
+          role="slider"
+          aria-label="色相スライダー"
+          aria-valuemin={0}
+          aria-valuemax={360}
+          aria-valuenow={Math.round(hue)}
+          aria-valuetext={`色相: ${Math.round(hue)}度`}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           onTouchStart={(e) => {
             e.preventDefault();
             setIsDragging(true);

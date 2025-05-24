@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface ColorValuesProps {
   color: {
     hex: string;
@@ -9,17 +11,31 @@ interface ColorValuesProps {
 }
 
 const ColorValues = ({ color }: ColorValuesProps) => {
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      setToastMessage(`コピーしました: ${text}`);
+      setTimeout(() => setToastMessage(null), 2000);
     } catch (err) {
       console.error('クリップボードへのコピーに失敗しました:', err);
+      setToastMessage('コピーに失敗しました');
+      setTimeout(() => setToastMessage(null), 2000);
     }
   };
 
   return (
-    <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800">
+    <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800 relative">
       <h2 className="text-lg font-semibold mb-4 text-gray-200">色の値</h2>
+      
+      {/* Toast notification */}
+      {toastMessage && (
+        <div className="absolute top-2 right-2 bg-green-600 text-white px-3 py-2 rounded shadow-lg z-10 text-sm">
+          {toastMessage}
+        </div>
+      )}
+      
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-400 mb-1">HEX</label>
