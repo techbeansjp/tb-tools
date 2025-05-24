@@ -25,7 +25,7 @@ const Sidebar = () => {
       { name: 'QRコード生成', href: '#' }
     ],
     '時間・日付ツール': [
-      { name: 'タイムゾーン変換', href: '#' },
+      { name: 'タイムゾーン変換', href: '/tools/timezone-converter' },
       { name: 'タイムスタンプ変換', href: '#' }
     ],
     'セキュリティツール': [
