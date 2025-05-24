@@ -33,13 +33,15 @@ export const TimestampConverter: React.FC = () => {
     
     if (datetimeString.includes('T')) {
       // datetime-local形式の場合、JSTとして扱う
-      const localDate = new Date(datetimeString);
-      if (isNaN(localDate.getTime())) {
+      const [datePart, timePart] = datetimeString.split('T');
+      const [year, month, day] = datePart.split('-').map(Number);
+      const [hour, minute] = timePart.split(':').map(Number);
+      
+      date = new Date(Date.UTC(year, month - 1, day, hour - 9, minute || 0));
+      
+      if (isNaN(date.getTime())) {
         throw new Error('有効な日時形式で入力してください（例: 2025-05-24T16:15）');
       }
-      
-      // JSTからUTCに変換（9時間差）
-      date = new Date(localDate.getTime() - (9 * 60 * 60 * 1000));
     } else {
       // その他の形式の場合
       date = new Date(datetimeString);
@@ -114,7 +116,12 @@ export const TimestampConverter: React.FC = () => {
     if (conversionMode === 'datetimeToTimestamp') {
       // JSTでの現在時刻をdatetime-local形式で設定
       const jstNow = new Date(now.getTime() + (9 * 60 * 60 * 1000));
-      const datetimeLocal = jstNow.toISOString().slice(0, 16);
+      const year = jstNow.getUTCFullYear();
+      const month = String(jstNow.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(jstNow.getUTCDate()).padStart(2, '0');
+      const hour = String(jstNow.getUTCHours()).padStart(2, '0');
+      const minute = String(jstNow.getUTCMinutes()).padStart(2, '0');
+      const datetimeLocal = `${year}-${month}-${day}T${hour}:${minute}`;
       setDatetimeInput(datetimeLocal);
     } else {
       // 現在のタイムスタンプを設定
