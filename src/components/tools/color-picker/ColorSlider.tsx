@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { hslToRgb, hslToHex } from '@/lib/colorUtils';
 
 interface ColorSliderProps {
   hue: number;
@@ -96,8 +97,9 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
     
     const height = canvas.height;
 
-    // 色相の計算（0-360）
-    const newHue = Math.max(0, Math.min(360, (1 - y / height) * 360));
+    // 色相の計算（0-360）、境界チェックを追加
+    const normalizedY = Math.max(0, Math.min(height, y));
+    const newHue = Math.max(0, Math.min(360, (1 - normalizedY / height) * 360));
 
     const color = {
       hex: hslToHex(newHue, 100, 50),
@@ -108,25 +110,31 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
     onColorChange(color);
   };
 
-  const hslToHex = (h: number, s: number, l: number): string => {
-    const rgb = hslToRgb(h, s, l);
-    return `#${rgb.r.toString(16).padStart(2, '0')}${rgb.g.toString(16).padStart(2, '0')}${rgb.b.toString(16).padStart(2, '0')}`;
-  };
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+    const step = e.shiftKey ? 30 : 5;
+    let newHue = hue;
 
-  const hslToRgb = (h: number, s: number, l: number): { r: number; g: number; b: number } => {
-    s /= 100;
-    l /= 100;
+    switch (e.key) {
+      case 'ArrowUp':
+        newHue = Math.min(360, hue + step);
+        break;
+      case 'ArrowDown':
+        newHue = Math.max(0, hue - step);
+        break;
+      default:
+        return;
+    }
 
-    const k = (n: number) => (n + h / 30) % 12;
-    const a = s * Math.min(l, 1 - l);
-    const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-
-    return {
-      r: Math.round(255 * f(0)),
-      g: Math.round(255 * f(8)),
-      b: Math.round(255 * f(4))
+    e.preventDefault();
+    const color = {
+      hex: hslToHex(newHue, 100, 50),
+      rgb: hslToRgb(newHue, 100, 50),
+      hsl: { h: newHue, s: 100, l: 50 }
     };
+
+    onColorChange(color);
   };
+
 
   return (
     <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800">
@@ -137,11 +145,18 @@ const ColorSlider = ({ hue, onColorChange }: ColorSliderProps) => {
           width={40}
           height={300}
           style={{ width: 40, height: 300 }}
-          className="cursor-crosshair"
+          className="cursor-crosshair focus:outline-none focus:ring-2 focus:ring-blue-500"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
+          role="slider"
+          aria-label="色相スライダー：上下矢印キーで調整、Shiftキーと組み合わせで大きく調整"
+          aria-valuemin={0}
+          aria-valuemax={360}
+          aria-valuenow={Math.round(hue)}
           onTouchStart={(e) => {
             e.preventDefault();
             setIsDragging(true);

@@ -55,12 +55,18 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
   const getRelativeCoords = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { s: saturation, l: lightness };
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(clientX - rect.left, canvas.width));
-    const y = Math.max(0, Math.min(clientY - rect.top, canvas.height));
-    const s = (x / canvas.width) * 100;
-    const l = 100 - (y / canvas.height) * 100;
-    return { s, l };
+    
+    try {
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, Math.min(clientX - rect.left, canvas.width));
+      const y = Math.max(0, Math.min(clientY - rect.top, canvas.height));
+      const s = Math.max(0, Math.min(100, (x / canvas.width) * 100));
+      const l = Math.max(0, Math.min(100, 100 - (y / canvas.height) * 100));
+      return { s, l };
+    } catch (error) {
+      console.error('Error calculating coordinates:', error);
+      return { s: saturation, l: lightness };
+    }
   };
 
   useEffect(() => {
@@ -119,6 +125,34 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
     onChange({ h: hue, s, l, hex, rgb });
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLCanvasElement>) => {
+    const step = e.shiftKey ? 10 : 1;
+    let newS = saturation;
+    let newL = lightness;
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        newS = Math.max(0, saturation - step);
+        break;
+      case 'ArrowRight':
+        newS = Math.min(100, saturation + step);
+        break;
+      case 'ArrowUp':
+        newL = Math.min(100, lightness + step);
+        break;
+      case 'ArrowDown':
+        newL = Math.max(0, lightness - step);
+        break;
+      default:
+        return;
+    }
+
+    e.preventDefault();
+    const hex = hslToHex(hue, newS, newL);
+    const rgb = hslToRgb(hue, newS, newL);
+    onChange({ h: hue, s: newS, l: newL, hex, rgb });
+  };
+
   return (
     <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800">
       <h2 className="text-lg font-semibold mb-4 text-gray-200">カラースクエア</h2>
@@ -126,9 +160,16 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
         ref={canvasRef}
         width={300}
         height={300}
-        className="w-full max-w-[300px] h-auto cursor-crosshair"
+        className="w-full max-w-[300px] h-auto cursor-crosshair focus:outline-none focus:ring-2 focus:ring-blue-500"
         onMouseDown={handleMouseDown}
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="slider"
+        aria-label="カラーピッカー：矢印キーで調整、Shiftキーと組み合わせで大きく調整"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(saturation)}
         onTouchStart={(e) => {
           e.preventDefault();
           setIsDragging(true);

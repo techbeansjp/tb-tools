@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 interface ColorValuesProps {
   color: {
     hex: string;
@@ -9,13 +11,24 @@ interface ColorValuesProps {
 }
 
 const ColorValues = ({ color }: ColorValuesProps) => {
+  const [copyStatus, setCopyStatus] = useState<string | null>(null);
+
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
+      setCopyStatus('コピーしました！');
     } catch (err) {
       console.error('クリップボードへのコピーに失敗しました:', err);
+      setCopyStatus('コピーに失敗しました');
     }
   };
+
+  useEffect(() => {
+    if (copyStatus) {
+      const timer = setTimeout(() => setCopyStatus(null), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copyStatus]);
 
   return (
     <div className="bg-[#161b22] rounded-lg shadow-lg p-4 border border-gray-800">
@@ -75,6 +88,11 @@ const ColorValues = ({ color }: ColorValuesProps) => {
           </div>
         </div>
       </div>
+      {copyStatus && (
+        <div className="fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg transition-opacity duration-200 bg-green-600 text-white">
+          {copyStatus}
+        </div>
+      )}
     </div>
   );
 };
