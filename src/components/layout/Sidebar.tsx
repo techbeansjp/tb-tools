@@ -1,14 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 
 const Sidebar = () => {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
 
-  const menuItems = {
+  const menuItems = useMemo(() => ({
     '開発支援ツール': [
       { name: 'カラーピッカー', href: '/tools/color-picker' },
       { name: 'JSON整形・検証', href: '/tools/json-formatter' },
@@ -36,7 +36,7 @@ const Sidebar = () => {
       { name: 'IP確認', href: '#' },
       { name: 'クエリパラメータ解析', href: '#' }
     ]
-  };
+  }), []);
 
   // 現在のパスに基づいて対応するカテゴリを自動的に開く
   useEffect(() => {
@@ -117,4 +117,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;                                
+export default Sidebar;                                                                
