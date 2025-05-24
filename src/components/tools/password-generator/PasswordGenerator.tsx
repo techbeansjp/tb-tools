@@ -242,7 +242,7 @@ export const PasswordGenerator: React.FC = () => {
             <div className="flex items-center space-x-4">
               <input
                 type="range"
-                min="4"
+                min="8"
                 max="64"
                 value={passwordLength}
                 onChange={(e) => setPasswordLength(parseInt(e.target.value))}
@@ -250,12 +250,12 @@ export const PasswordGenerator: React.FC = () => {
               />
               <input
                 type="number"
-                min="4"
+                min="8"
                 max="64"
                 value={passwordLength}
                 onChange={(e) => {
                   const value = parseInt(e.target.value);
-                  if (value >= 4 && value <= 64) {
+                  if (value >= 8 && value <= 64) {
                     setPasswordLength(value);
                   }
                 }}
