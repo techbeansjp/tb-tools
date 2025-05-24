@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-interface TimezoneConverterProps {}
+type TimezoneConverterProps = {}
 
 const TIMEZONES = [
   { value: 'Asia/Tokyo', label: '日本時間 (JST)', offset: '+09:00' },
@@ -26,7 +26,7 @@ const TIMEZONES = [
   { value: 'Asia/Dubai', label: 'ドバイ (GST)', offset: '+04:00' },
 ];
 
-export const TimezoneConverter: React.FC<TimezoneConverterProps> = () => {
+export const TimezoneConverter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'current' | 'custom'>('current');
   const [sourceTimezone, setSourceTimezone] = useState<string>('Asia/Tokyo');
   const [targetTimezone, setTargetTimezone] = useState<string>('UTC');
@@ -277,7 +277,7 @@ export const TimezoneConverter: React.FC<TimezoneConverterProps> = () => {
                     </div>
                     <div className="text-lg font-mono text-white">
                       {customDate && customTime ? 
-                        `${customDate.split('-')[0]}年${customDate.split('-')[1]}月${customDate.split('-')[2]}日 ${customTime}:00` 
+                        formatDateTime(new Date(`${customDate}T${customTime}:00`), sourceTimezone)
                         : '日時を選択してください'
                       }
                     </div>
