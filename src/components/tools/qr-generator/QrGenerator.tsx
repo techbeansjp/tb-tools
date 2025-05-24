@@ -16,45 +16,40 @@ interface QRCodeConfig {
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
 }
 
-// QRコードバージョン情報
+// QRコードバージョン情報 - データコードワード容量（バイト単位）
 const QR_VERSIONS = [
-  { version: 1, size: 21, capacity: { L: 17, M: 14, Q: 11, H: 7 } },
-  { version: 2, size: 25, capacity: { L: 32, M: 26, Q: 20, H: 14 } },
-  { version: 3, size: 29, capacity: { L: 53, M: 42, Q: 32, H: 24 } },
-  { version: 4, size: 33, capacity: { L: 78, M: 62, Q: 46, H: 34 } },
+  { version: 1, size: 21, capacity: { L: 17, M: 14, Q: 11, H: 7 }, dataCapacity: { L: 19, M: 16, Q: 13, H: 9 } },
+  { version: 2, size: 25, capacity: { L: 32, M: 26, Q: 20, H: 14 }, dataCapacity: { L: 34, M: 28, Q: 22, H: 16 } },
+  { version: 3, size: 29, capacity: { L: 53, M: 42, Q: 32, H: 24 }, dataCapacity: { L: 55, M: 44, Q: 34, H: 26 } },
+  { version: 4, size: 33, capacity: { L: 78, M: 62, Q: 46, H: 34 }, dataCapacity: { L: 80, M: 64, Q: 48, H: 36 } },
 ];
 
 // Reed-Solomon用ガロア体計算
-class GaloisField {
-  private static EXP_TABLE: number[] = [];
-  private static LOG_TABLE: number[] = [];
-  
-  static {
-    // Initialize Galois Field tables
-    this.EXP_TABLE = new Array(255);
-    this.LOG_TABLE = new Array(256);
-    
-    let val = 1;
-    for (let i = 0; i < 255; i++) {
-      this.EXP_TABLE[i] = val;
-      this.LOG_TABLE[val] = i;
-      val = val << 1;
-      if (val & 0x100) {
-        val ^= 0x11d;
-      }
+const EXP_TABLE = new Array<number>(255);
+const LOG_TABLE = new Array<number>(256);
+
+// Initialize Galois Field tables
+(() => {
+  let val = 1;
+  for (let i = 0; i < 255; i++) {
+    EXP_TABLE[i] = val;
+    LOG_TABLE[val] = i;
+    val = val << 1;
+    if (val & 0x100) {
+      val ^= 0x11d;
     }
   }
-  
-  static multiply(a: number, b: number): number {
-    if (a === 0 || b === 0) return 0;
-    return this.EXP_TABLE[(this.LOG_TABLE[a] + this.LOG_TABLE[b]) % 255];
-  }
-  
-  static power(base: number, exp: number): number {
-    if (base === 0) return 0;
-    return this.EXP_TABLE[(this.LOG_TABLE[base] * exp) % 255];
-  }
-}
+})();
+
+const gfMultiply = (a: number, b: number): number => {
+  if (a === 0 || b === 0) return 0;
+  return EXP_TABLE[(LOG_TABLE[a] + LOG_TABLE[b]) % 255];
+};
+
+const gfPower = (base: number, exp: number): number => {
+  if (base === 0) return 0;
+  return EXP_TABLE[(LOG_TABLE[base] * exp) % 255];
+};
 
 export const QrGenerator: React.FC<QRGeneratorProps> = () => {
   const [inputText, setInputText] = useState<string>('');
@@ -67,62 +62,52 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
 
   // QRコード生成関数
   const generateQRCode = useCallback(async (config: QRCodeConfig): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      try {
-        const canvas = canvasRef.current;
-        if (!canvas) {
-          reject(new Error('Canvas element not found'));
-          return;
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      throw new Error('Canvas element not found');
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('Failed to get canvas context');
+    }
+
+    // 最適なバージョンを選択
+    const version = selectVersion(config.text, config.errorCorrectionLevel);
+    if (!version) {
+      throw new Error('Text too long for QR code');
+    }
+
+    const matrix = generateQRMatrix(config.text, version, config.errorCorrectionLevel);
+    
+    // キャンバスサイズを設定
+    const moduleSize = Math.floor((config.size - config.margin * 2) / version.size);
+    const actualSize = version.size * moduleSize + config.margin * 2;
+    canvas.width = actualSize;
+    canvas.height = actualSize;
+
+    // 背景を白で塗りつぶし
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, actualSize, actualSize);
+
+    // QRコードを描画
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < version.size; row++) {
+      for (let col = 0; col < version.size; col++) {
+        if (matrix[row][col]) {
+          const x = config.margin + col * moduleSize;
+          const y = config.margin + row * moduleSize;
+          ctx.fillRect(x, y, moduleSize, moduleSize);
         }
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error('Failed to get canvas context'));
-          return;
-        }
-
-        // 最適なバージョンを選択
-        const version = selectVersion(config.text, config.errorCorrectionLevel);
-        if (!version) {
-          reject(new Error('Text too long for QR code'));
-          return;
-        }
-
-        const matrix = generateQRMatrix(config.text, version, config.errorCorrectionLevel);
-        
-        // キャンバスサイズを設定
-        const moduleSize = Math.floor((config.size - config.margin * 2) / version.size);
-        const actualSize = version.size * moduleSize + config.margin * 2;
-        canvas.width = actualSize;
-        canvas.height = actualSize;
-
-        // 背景を白で塗りつぶし
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(0, 0, actualSize, actualSize);
-
-        // QRコードを描画
-        ctx.fillStyle = '#000000';
-        for (let row = 0; row < version.size; row++) {
-          for (let col = 0; col < version.size; col++) {
-            if (matrix[row][col]) {
-              const x = config.margin + col * moduleSize;
-              const y = config.margin + row * moduleSize;
-              ctx.fillRect(x, y, moduleSize, moduleSize);
-            }
-          }
-        }
-
-        resolve(canvas.toDataURL('image/png'));
-      } catch (err) {
-        reject(err);
       }
-    });
+    }
+
+    return canvas.toDataURL('image/png');
   }, []);
 
   // バージョン選択
   const selectVersion = (text: string, ecLevel: 'L' | 'M' | 'Q' | 'H') => {
     const textLength = text.length;
-    return QR_VERSIONS.find(v => v.capacity[ecLevel] >= textLength);
+    return QR_VERSIONS.find(v => v.dataCapacity[ecLevel] >= textLength);
   };
 
   // QRマトリックス生成
@@ -184,7 +169,8 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
     }
     
     // ターミネーター
-    for (let i = 0; i < Math.min(4, version.capacity[ecLevel] * 8 - data.length); i++) {
+    const maxDataBits = version.dataCapacity[ecLevel] * 8;
+    for (let i = 0; i < Math.min(4, maxDataBits - data.length); i++) {
       data.push(0);
     }
     
@@ -196,10 +182,10 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
     // パディング用コードワード
     const paddingBytes = [236, 17]; // 11101100, 00010001
     let paddingIndex = 0;
-    while (data.length < version.capacity[ecLevel] * 8) {
+    while (data.length < maxDataBits) {
       const paddingByte = paddingBytes[paddingIndex % 2];
       for (let bit = 7; bit >= 0; bit--) {
-        if (data.length < version.capacity[ecLevel] * 8) {
+        if (data.length < maxDataBits) {
           data.push((paddingByte >> bit) & 1);
         }
       }
@@ -230,11 +216,11 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
     // 簡単な誤り訂正符号生成 (実際のReed-Solomonは複雑)
     const ecBytes = [];
     for (let i = 0; i < ecBlocks; i++) {
-      ecBytes.push(0); // Simplified - normally would calculate proper EC codewords
+      ecBytes.push(0); // Simplified - needs proper Reed-Solomon calculation
     }
 
     // バイトをビットに戻す
-    const result = [];
+    const result: number[] = [];
     [...dataBytes, ...ecBytes].forEach(byte => {
       for (let bit = 7; bit >= 0; bit--) {
         result.push((byte >> bit) & 1);
