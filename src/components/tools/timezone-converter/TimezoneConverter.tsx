@@ -47,8 +47,14 @@ export const TimezoneConverter: React.FC = () => {
   // カスタム日時の初期化
   useEffect(() => {
     const now = new Date();
-    const localDate = now.toISOString().split('T')[0];
-    const localTime = now.toTimeString().split(' ')[0].substring(0, 5);
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
+    
+    const localDate = `${year}-${month}-${day}`;
+    const localTime = `${hour}:${minute}`;
     setCustomDate(localDate);
     setCustomTime(localTime);
     setCustomDateTime(`${localDate}T${localTime}`);
@@ -96,22 +102,18 @@ export const TimezoneConverter: React.FC = () => {
     if (!customDateTime) return '';
     
     try {
-      // カスタム日時をソースタイムゾーンの時刻として解釈
-      const [date, time] = customDateTime.split('T');
-      const [year, month, day] = date.split('-').map(Number);
-      const [hour, minute] = time.split(':').map(Number);
+      const inputDate = new Date(`${customDateTime}:00`);
       
-      // ソースタイムゾーンでの日時を作成
-      const sourceDate = new Date();
-      sourceDate.setFullYear(year, month - 1, day);
-      sourceDate.setHours(hour, minute, 0, 0);
+      // ソースタイムゾーンの現在時刻を取得
+      const sourceTime = new Date(
+        inputDate.toLocaleString('en-US', { timeZone: sourceTimezone })
+      );
       
-      // タイムゾーンオフセットを考慮
-      const tempDate = new Date(sourceDate.toLocaleString('en-US', { timeZone: sourceTimezone }));
-      const offset = sourceDate.getTime() - tempDate.getTime();
-      const adjustedDate = new Date(sourceDate.getTime() + offset);
+      const utcTime = new Date(
+        inputDate.getTime() + (inputDate.getTime() - sourceTime.getTime())
+      );
       
-      return formatDateTime(adjustedDate, targetTimezone);
+      return formatDateTime(utcTime, targetTimezone);
     } catch (error) {
       return '無効な日時';
     }
