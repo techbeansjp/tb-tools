@@ -21,7 +21,7 @@ const Sidebar = () => {
       { name: '文字数カウント', href: '#' }
     ],
     '画像処理ツール': [
-      { name: '画像変換', href: '#' },
+      { name: '画像変換', href: '/tools/image-converter' },
       { name: 'QRコード生成', href: '#' }
     ],
     '時間・日付ツール': [
