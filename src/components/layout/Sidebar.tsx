@@ -26,7 +26,7 @@ const Sidebar = () => {
     ],
     '時間・日付ツール': [
       { name: 'タイムゾーン変換', href: '#' },
-      { name: 'タイムスタンプ変換', href: '#' }
+      { name: 'タイムスタンプ変換', href: '/tools/timestamp-converter' }
     ],
     'セキュリティツール': [
       { name: 'パスワード生成', href: '/tools/password-generator' },
