@@ -6,6 +6,32 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+const TimezoneSelect: React.FC<{
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+}> = ({ value, onChange, label }) => (
+  <div>
+    <Label className="text-gray-300 mb-2 block">{label}</Label>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="bg-[#0d1117] border-gray-700 text-gray-200">
+        <SelectValue placeholder="タイムゾーンを選択" />
+      </SelectTrigger>
+      <SelectContent className="bg-[#0d1117] border-gray-700">
+        {TIMEZONES.map((timezone) => (
+          <SelectItem 
+            key={timezone.value} 
+            value={timezone.value}
+            className="text-gray-200 hover:bg-[#21262d]"
+          >
+            {timezone.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  </div>
+);
+
 const TIMEZONES = [
   { value: 'Asia/Tokyo', label: '日本時間 (JST)', offset: '+09:00' },
   { value: 'UTC', label: '協定世界時 (UTC)', offset: '+00:00' },
@@ -100,19 +126,19 @@ export const TimezoneConverter: React.FC = () => {
     if (!customDateTime) return '';
     
     try {
-      const inputDate = new Date(`${customDateTime}:00`);
+      const [date, time] = customDateTime.split('T');
+      const [year, month, day] = date.split('-').map(Number);
+      const [hour, minute] = time.split(':').map(Number);
       
-      // ソースタイムゾーンでの現在のオフセットを取得
-      const tempDate = new Date();
-      const sourceOffset =
-        new Date(
-          tempDate.toLocaleString('en-US', { timeZone: sourceTimezone })
-        ).getTime() -
-        tempDate.getTime();
+      // ソースタイムゾーンでの時刻として明示的に作成
+      const tempDate = new Date(year, month - 1, day, hour, minute, 0);
+      const sourceTime = new Date(
+        tempDate.toLocaleString('en-US', { timeZone: sourceTimezone })
+      );
+      const offset = tempDate.getTime() - sourceTime.getTime();
+      const utcEquivalent = new Date(tempDate.getTime() + offset);
       
-      const utcTime = new Date(inputDate.getTime() - sourceOffset);
-      
-      return formatDateTime(utcTime, targetTimezone);
+      return formatDateTime(utcEquivalent, targetTimezone);
     } catch (error) {
       return '無効な日時';
     }
@@ -156,25 +182,11 @@ export const TimezoneConverter: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ソースタイムゾーン */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">基準タイムゾーン</Label>
-                  <Select value={sourceTimezone} onValueChange={setSourceTimezone}>
-                    <SelectTrigger className="bg-[#0d1117] border-gray-700 text-gray-200">
-                      <SelectValue placeholder="タイムゾーンを選択" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-gray-700">
-                      {TIMEZONES.map((timezone) => (
-                        <SelectItem 
-                          key={timezone.value} 
-                          value={timezone.value}
-                          className="text-gray-200 hover:bg-[#21262d]"
-                        >
-                          {timezone.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TimezoneSelect 
+                  value={sourceTimezone} 
+                  onChange={setSourceTimezone}
+                  label="基準タイムゾーン"
+                />
                 
                 <div className="bg-[#0d1117] border border-gray-700 rounded-lg p-4">
                   <div className="text-center">
@@ -190,25 +202,11 @@ export const TimezoneConverter: React.FC = () => {
 
               {/* ターゲットタイムゾーン */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">変換先タイムゾーン</Label>
-                  <Select value={targetTimezone} onValueChange={setTargetTimezone}>
-                    <SelectTrigger className="bg-[#0d1117] border-gray-700 text-gray-200">
-                      <SelectValue placeholder="タイムゾーンを選択" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-gray-700">
-                      {TIMEZONES.map((timezone) => (
-                        <SelectItem 
-                          key={timezone.value} 
-                          value={timezone.value}
-                          className="text-gray-200 hover:bg-[#21262d]"
-                        >
-                          {timezone.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TimezoneSelect 
+                  value={targetTimezone} 
+                  onChange={setTargetTimezone}
+                  label="変換先タイムゾーン"
+                />
                 
                 <div className="bg-[#0d1117] border border-blue-500 rounded-lg p-4">
                   <div className="text-center">
@@ -231,25 +229,11 @@ export const TimezoneConverter: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ソースタイムゾーンと日時入力 */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">基準タイムゾーン</Label>
-                  <Select value={sourceTimezone} onValueChange={setSourceTimezone}>
-                    <SelectTrigger className="bg-[#0d1117] border-gray-700 text-gray-200">
-                      <SelectValue placeholder="タイムゾーンを選択" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-gray-700">
-                      {TIMEZONES.map((timezone) => (
-                        <SelectItem 
-                          key={timezone.value} 
-                          value={timezone.value}
-                          className="text-gray-200 hover:bg-[#21262d]"
-                        >
-                          {timezone.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TimezoneSelect 
+                  value={sourceTimezone} 
+                  onChange={setSourceTimezone}
+                  label="基準タイムゾーン"
+                />
 
                 <div>
                   <Label className="text-gray-300 mb-2 block">日付</Label>
@@ -278,7 +262,11 @@ export const TimezoneConverter: React.FC = () => {
                     </div>
                     <div className="text-lg font-mono text-white">
                       {customDate && customTime ? 
-                        formatDateTime(new Date(`${customDate}T${customTime}:00`), sourceTimezone)
+                        (() => {
+                          const [year, month, day] = customDate.split('-').map(Number);
+                          const [hour, minute] = customTime.split(':').map(Number);
+                          return `${year}年${String(month).padStart(2, '0')}月${String(day).padStart(2, '0')}日 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`;
+                        })()
                         : '日時を選択してください'
                       }
                     </div>
@@ -288,25 +276,11 @@ export const TimezoneConverter: React.FC = () => {
 
               {/* ターゲットタイムゾーンと変換結果 */}
               <div className="space-y-4">
-                <div>
-                  <Label className="text-gray-300 mb-2 block">変換先タイムゾーン</Label>
-                  <Select value={targetTimezone} onValueChange={setTargetTimezone}>
-                    <SelectTrigger className="bg-[#0d1117] border-gray-700 text-gray-200">
-                      <SelectValue placeholder="タイムゾーンを選択" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#0d1117] border-gray-700">
-                      {TIMEZONES.map((timezone) => (
-                        <SelectItem 
-                          key={timezone.value} 
-                          value={timezone.value}
-                          className="text-gray-200 hover:bg-[#21262d]"
-                        >
-                          {timezone.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <TimezoneSelect 
+                  value={targetTimezone} 
+                  onChange={setTargetTimezone}
+                  label="変換先タイムゾーン"
+                />
 
                 <div className="mt-20">
                   <div className="bg-[#0d1117] border border-blue-500 rounded-lg p-4">
