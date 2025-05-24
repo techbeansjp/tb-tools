@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Encoder, Byte } from '@nuintun/qrcode';
 
 interface QRGeneratorProps {}
 
@@ -15,41 +16,6 @@ interface QRCodeConfig {
   margin: number;
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
 }
-
-// QRコードバージョン情報 - データコードワード容量（バイト単位）
-const QR_VERSIONS = [
-  { version: 1, size: 21, capacity: { L: 17, M: 14, Q: 11, H: 7 }, dataCapacity: { L: 19, M: 16, Q: 13, H: 9 } },
-  { version: 2, size: 25, capacity: { L: 32, M: 26, Q: 20, H: 14 }, dataCapacity: { L: 34, M: 28, Q: 22, H: 16 } },
-  { version: 3, size: 29, capacity: { L: 53, M: 42, Q: 32, H: 24 }, dataCapacity: { L: 55, M: 44, Q: 34, H: 26 } },
-  { version: 4, size: 33, capacity: { L: 78, M: 62, Q: 46, H: 34 }, dataCapacity: { L: 80, M: 64, Q: 48, H: 36 } },
-];
-
-// Reed-Solomon用ガロア体計算
-const EXP_TABLE = new Array<number>(255);
-const LOG_TABLE = new Array<number>(256);
-
-// Initialize Galois Field tables
-(() => {
-  let val = 1;
-  for (let i = 0; i < 255; i++) {
-    EXP_TABLE[i] = val;
-    LOG_TABLE[val] = i;
-    val = val << 1;
-    if (val & 0x100) {
-      val ^= 0x11d;
-    }
-  }
-})();
-
-const gfMultiply = (a: number, b: number): number => {
-  if (a === 0 || b === 0) return 0;
-  return EXP_TABLE[(LOG_TABLE[a] + LOG_TABLE[b]) % 255];
-};
-
-const gfPower = (base: number, exp: number): number => {
-  if (base === 0) return 0;
-  return EXP_TABLE[(LOG_TABLE[base] * exp) % 255];
-};
 
 export const QrGenerator: React.FC<QRGeneratorProps> = () => {
   const [inputText, setInputText] = useState<string>('');
@@ -71,17 +37,18 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
       throw new Error('Failed to get canvas context');
     }
 
-    // 最適なバージョンを選択
-    const version = selectVersion(config.text, config.errorCorrectionLevel);
-    if (!version) {
-      throw new Error('Text too long for QR code');
-    }
+    const encoder = new Encoder({
+      level: config.errorCorrectionLevel
+    });
 
-    const matrix = generateQRMatrix(config.text, version, config.errorCorrectionLevel);
-    
+    const byteSegment = new Byte(config.text);
+    const encoded = encoder.encode(byteSegment);
+
+    const moduleCount = encoded.size;
+
     // キャンバスサイズを設定
-    const moduleSize = Math.floor((config.size - config.margin * 2) / version.size);
-    const actualSize = version.size * moduleSize + config.margin * 2;
+    const moduleSize = Math.floor((config.size - config.margin * 2) / moduleCount);
+    const actualSize = moduleCount * moduleSize + config.margin * 2;
     canvas.width = actualSize;
     canvas.height = actualSize;
 
@@ -91,9 +58,9 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
 
     // QRコードを描画
     ctx.fillStyle = '#000000';
-    for (let row = 0; row < version.size; row++) {
-      for (let col = 0; col < version.size; col++) {
-        if (matrix[row][col]) {
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        if (encoded.get(col, row) === 1) {
           const x = config.margin + col * moduleSize;
           const y = config.margin + row * moduleSize;
           ctx.fillRect(x, y, moduleSize, moduleSize);
@@ -103,311 +70,6 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
 
     return canvas.toDataURL('image/png');
   }, []);
-
-  // バージョン選択
-  const selectVersion = (text: string, ecLevel: 'L' | 'M' | 'Q' | 'H') => {
-    const textLength = text.length;
-    return QR_VERSIONS.find(v => v.dataCapacity[ecLevel] >= textLength);
-  };
-
-  // QRマトリックス生成
-  const generateQRMatrix = (text: string, version: typeof QR_VERSIONS[0], ecLevel: 'L' | 'M' | 'Q' | 'H'): boolean[][] => {
-    const size = version.size;
-    const matrix: (boolean | null)[][] = Array(size).fill(null).map(() => Array(size).fill(null));
-
-    // ファインダーパターンを配置
-    addFinderPattern(matrix, 0, 0);
-    addFinderPattern(matrix, 0, size - 7);
-    addFinderPattern(matrix, size - 7, 0);
-
-    // セパレーターを配置
-    addSeparators(matrix, size);
-
-    // タイミングパターンを配置
-    addTimingPatterns(matrix, size);
-
-    // ダークモジュールを配置
-    if (size > 21) {
-      matrix[4 * version.version + 9][8] = true;
-    }
-
-    // データエンコーディング
-    const encodedData = encodeData(text, ecLevel, version);
-    
-    // データを配置
-    placeData(matrix, encodedData, size);
-
-    // マスキング
-    const maskedMatrix = applyMask(matrix, 0); // Use mask pattern 0 for simplicity
-
-    // フォーマット情報を配置
-    addFormatInfo(maskedMatrix, ecLevel, 0, size);
-
-    return maskedMatrix as boolean[][];
-  };
-
-  // データエンコーディング
-  const encodeData = (text: string, ecLevel: 'L' | 'M' | 'Q' | 'H', version: typeof QR_VERSIONS[0]): boolean[] => {
-    const data: number[] = [];
-    
-    // モードインジケーター (byte mode: 0100)
-    data.push(0, 1, 0, 0);
-    
-    // 文字数インジケーター
-    const lengthBits = version.version <= 9 ? 8 : 16;
-    const length = text.length;
-    for (let i = lengthBits - 1; i >= 0; i--) {
-      data.push((length >> i) & 1);
-    }
-    
-    // データ
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      for (let bit = 7; bit >= 0; bit--) {
-        data.push((charCode >> bit) & 1);
-      }
-    }
-    
-    // ターミネーター
-    const maxDataBits = version.dataCapacity[ecLevel] * 8;
-    for (let i = 0; i < Math.min(4, maxDataBits - data.length); i++) {
-      data.push(0);
-    }
-    
-    // パディング
-    while (data.length % 8 !== 0) {
-      data.push(0);
-    }
-    
-    // パディング用コードワード
-    const paddingBytes = [236, 17]; // 11101100, 00010001
-    let paddingIndex = 0;
-    while (data.length < maxDataBits) {
-      const paddingByte = paddingBytes[paddingIndex % 2];
-      for (let bit = 7; bit >= 0; bit--) {
-        if (data.length < maxDataBits) {
-          data.push((paddingByte >> bit) & 1);
-        }
-      }
-      paddingIndex++;
-    }
-
-    // Reed-Solomon誤り訂正符号
-    const correctedData = addErrorCorrection(data, ecLevel, version);
-    
-    return correctedData.map(bit => bit === 1);
-  };
-
-  // Reed-Solomon誤り訂正符号追加
-  const addErrorCorrection = (data: number[], ecLevel: 'L' | 'M' | 'Q' | 'H', version: typeof QR_VERSIONS[0]): number[] => {
-    // 簡略化された誤り訂正実装
-    const ecBlocks = getErrorCorrectionBlocks(ecLevel, version);
-    const dataBytes = [];
-    
-    // ビットをバイトに変換
-    for (let i = 0; i < data.length; i += 8) {
-      let byte = 0;
-      for (let j = 0; j < 8 && i + j < data.length; j++) {
-        byte = (byte << 1) | data[i + j];
-      }
-      dataBytes.push(byte);
-    }
-
-    // 簡単な誤り訂正符号生成 (実際のReed-Solomonは複雑)
-    const ecBytes = [];
-    for (let i = 0; i < ecBlocks; i++) {
-      ecBytes.push(0); // Simplified - needs proper Reed-Solomon calculation
-    }
-
-    // バイトをビットに戻す
-    const result: number[] = [];
-    [...dataBytes, ...ecBytes].forEach(byte => {
-      for (let bit = 7; bit >= 0; bit--) {
-        result.push((byte >> bit) & 1);
-      }
-    });
-
-    return result;
-  };
-
-  // 誤り訂正ブロック数取得
-  const getErrorCorrectionBlocks = (ecLevel: 'L' | 'M' | 'Q' | 'H', version: typeof QR_VERSIONS[0]): number => {
-    const ecMap = {
-      L: [7, 10, 15, 20],
-      M: [10, 16, 26, 18],
-      Q: [13, 22, 18, 26],
-      H: [17, 28, 22, 16]
-    };
-    return ecMap[ecLevel][version.version - 1] || 10;
-  };
-
-  // ファインダーパターン追加
-  const addFinderPattern = (matrix: (boolean | null)[][], startRow: number, startCol: number) => {
-    const pattern = [
-      [1,1,1,1,1,1,1],
-      [1,0,0,0,0,0,1],
-      [1,0,1,1,1,0,1],
-      [1,0,1,1,1,0,1],
-      [1,0,1,1,1,0,1],
-      [1,0,0,0,0,0,1],
-      [1,1,1,1,1,1,1]
-    ];
-
-    for (let row = 0; row < 7; row++) {
-      for (let col = 0; col < 7; col++) {
-        if (startRow + row < matrix.length && startCol + col < matrix[0].length) {
-          matrix[startRow + row][startCol + col] = pattern[row][col] === 1;
-        }
-      }
-    }
-  };
-
-  // セパレーター追加
-  const addSeparators = (matrix: (boolean | null)[][], size: number) => {
-    // Top-left separator
-    for (let i = 0; i < 8; i++) {
-      if (i < size) matrix[7][i] = false;
-      if (i < size) matrix[i][7] = false;
-    }
-    
-    // Top-right separator
-    for (let i = 0; i < 8; i++) {
-      if (size - 8 + i >= 0) matrix[7][size - 8 + i] = false;
-      if (i < size) matrix[i][size - 8] = false;
-    }
-    
-    // Bottom-left separator
-    for (let i = 0; i < 8; i++) {
-      if (size - 8 + i >= 0) matrix[size - 8 + i][7] = false;
-      if (i < size) matrix[size - 8][i] = false;
-    }
-  };
-
-  // タイミングパターン追加
-  const addTimingPatterns = (matrix: (boolean | null)[][], size: number) => {
-    for (let i = 8; i < size - 8; i++) {
-      matrix[6][i] = i % 2 === 0;
-      matrix[i][6] = i % 2 === 0;
-    }
-  };
-
-  // データ配置
-  const placeData = (matrix: (boolean | null)[][], data: boolean[], size: number) => {
-    let dataIndex = 0;
-    let up = true;
-
-    for (let col = size - 1; col > 0; col -= 2) {
-      if (col === 6) col--; // Skip timing column
-
-      for (let count = 0; count < size; count++) {
-        const row = up ? size - 1 - count : count;
-
-        for (let c = 0; c < 2; c++) {
-          const currentCol = col - c;
-          if (matrix[row][currentCol] === null) {
-            if (dataIndex < data.length) {
-              matrix[row][currentCol] = data[dataIndex];
-              dataIndex++;
-            } else {
-              matrix[row][currentCol] = false;
-            }
-          }
-        }
-      }
-      up = !up;
-    }
-  };
-
-  // マスキング適用
-  const applyMask = (matrix: (boolean | null)[][], maskPattern: number): (boolean | null)[][] => {
-    const size = matrix.length;
-    const masked = matrix.map(row => [...row]);
-
-    for (let row = 0; row < size; row++) {
-      for (let col = 0; col < size; col++) {
-        if (masked[row][col] !== null && !isReservedArea(row, col, size)) {
-          let shouldMask = false;
-          
-          switch (maskPattern) {
-            case 0:
-              shouldMask = (row + col) % 2 === 0;
-              break;
-            case 1:
-              shouldMask = row % 2 === 0;
-              break;
-            case 2:
-              shouldMask = col % 3 === 0;
-              break;
-            // Add more mask patterns as needed
-          }
-          
-          if (shouldMask) {
-            masked[row][col] = !masked[row][col];
-          }
-        }
-      }
-    }
-
-    return masked;
-  };
-
-  // 予約領域チェック
-  const isReservedArea = (row: number, col: number, size: number): boolean => {
-    // Finder patterns
-    if ((row < 9 && col < 9) || 
-        (row < 9 && col >= size - 8) || 
-        (row >= size - 8 && col < 9)) {
-      return true;
-    }
-    
-    // Timing patterns
-    if (row === 6 || col === 6) {
-      return true;
-    }
-    
-    return false;
-  };
-
-  // フォーマット情報追加
-  const addFormatInfo = (matrix: (boolean | null)[][], ecLevel: 'L' | 'M' | 'Q' | 'H', maskPattern: number, size: number) => {
-    const ecLevelBits = { L: 1, M: 0, Q: 3, H: 2 };
-    const formatInfo = (ecLevelBits[ecLevel] << 3) | maskPattern;
-    
-    // BCH符号化 (簡略版)
-    let bchCode = formatInfo << 10;
-    const generator = 0x537; // BCH生成多項式
-    
-    for (let i = 4; i >= 0; i--) {
-      if ((bchCode >> (14 - i)) & 1) {
-        bchCode ^= generator << (4 - i);
-      }
-    }
-    
-    const finalFormat = (formatInfo << 10) | bchCode;
-    const formatBits = [];
-    for (let i = 14; i >= 0; i--) {
-      formatBits.push((finalFormat >> i) & 1);
-    }
-
-    // フォーマット情報を配置
-    for (let i = 0; i < 15; i++) {
-      const bit = formatBits[i] === 1;
-      
-      if (i < 6) {
-        matrix[8][i] = bit;
-        matrix[size - 1 - i][8] = bit;
-      } else if (i < 8) {
-        matrix[8][i + 1] = bit;
-        matrix[size - 7 + (i - 6)][8] = bit;
-      } else if (i === 8) {
-        matrix[7][8] = bit;
-        matrix[8][size - 8] = bit;
-      } else {
-        matrix[14 - i][8] = bit;
-        matrix[8][size - 15 + i] = bit;
-      }
-    }
-  };
 
   // QRコード生成ハンドラー
   const handleGenerateQR = async () => {
