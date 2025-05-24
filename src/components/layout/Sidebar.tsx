@@ -22,11 +22,11 @@ const Sidebar = () => {
     ],
     '画像処理ツール': [
       { name: '画像変換', href: '/tools/image-converter' },
-      { name: 'QRコード生成', href: '#' }
+      { name: 'QRコード生成', href: '/tools/qr-generator' }
     ],
     '時間・日付ツール': [
       { name: 'タイムゾーン変換', href: '/tools/timezone-converter' },
-      { name: 'タイムスタンプ変換', href: '#' }
+      { name: 'タイムスタンプ変換', href: '/tools/timestamp-converter' }
     ],
     'セキュリティツール': [
       { name: 'パスワード生成', href: '/tools/password-generator' },
@@ -117,4 +117,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;                                                                
+export default Sidebar;                                                                                                                                                                                                
