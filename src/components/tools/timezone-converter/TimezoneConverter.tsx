@@ -6,8 +6,6 @@ import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-type TimezoneConverterProps = {}
-
 const TIMEZONES = [
   { value: 'Asia/Tokyo', label: '日本時間 (JST)', offset: '+09:00' },
   { value: 'UTC', label: '協定世界時 (UTC)', offset: '+00:00' },
@@ -104,14 +102,15 @@ export const TimezoneConverter: React.FC = () => {
     try {
       const inputDate = new Date(`${customDateTime}:00`);
       
-      // ソースタイムゾーンの現在時刻を取得
-      const sourceTime = new Date(
-        inputDate.toLocaleString('en-US', { timeZone: sourceTimezone })
-      );
+      // ソースタイムゾーンでの現在のオフセットを取得
+      const tempDate = new Date();
+      const sourceOffset =
+        new Date(
+          tempDate.toLocaleString('en-US', { timeZone: sourceTimezone })
+        ).getTime() -
+        tempDate.getTime();
       
-      const utcTime = new Date(
-        inputDate.getTime() + (inputDate.getTime() - sourceTime.getTime())
-      );
+      const utcTime = new Date(inputDate.getTime() - sourceOffset);
       
       return formatDateTime(utcTime, targetTimezone);
     } catch (error) {
