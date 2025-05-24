@@ -29,7 +29,7 @@ const Sidebar = () => {
       { name: 'タイムスタンプ変換', href: '#' }
     ],
     'セキュリティツール': [
-      { name: 'パスワード生成', href: '#' },
+      { name: 'パスワード生成', href: '/tools/password-generator' },
       { name: 'ハッシュ生成', href: '/tools/hash-generator' }
     ],
     'ネットワークツール': [
