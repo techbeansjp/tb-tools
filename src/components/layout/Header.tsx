@@ -1,17 +1,17 @@
 'use client';
 
-import Link from 'next/link';
+import LoadingLink from '@/components/ui/loading-link';
 
 const Header = () => {
   return (
     <header className="bg-[#161b22] border-b border-gray-800">
       <div className="w-full px-4 py-4">
-        <Link href="/" className="text-xl font-bold text-gray-200">
+        <LoadingLink href="/" className="text-xl font-bold text-gray-200">
           TechBeans Tools
-        </Link>
+        </LoadingLink>
       </div>
     </header>
   );
 };
 
-export default Header; 
+export default Header;

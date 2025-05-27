@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import LoadingLink from '@/components/ui/loading-link';
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -55,12 +55,12 @@ const Sidebar = () => {
       <nav className="p-4">
         <ul className="space-y-2">
           <li>
-            <Link
+            <LoadingLink
               href="/"
               className="block px-4 py-2 text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md"
             >
               ダッシュボード
-            </Link>
+            </LoadingLink>
           </li>
           {Object.entries(menuItems).map(([category, items]) => (
             <li key={category}>
@@ -94,7 +94,7 @@ const Sidebar = () => {
                     const isActive = pathname === item.href;
                     return (
                       <li key={item.name}>
-                        <Link
+                        <LoadingLink
                           href={item.href}
                           className={`block px-4 py-2 text-sm rounded-md ${
                             isActive
@@ -103,7 +103,7 @@ const Sidebar = () => {
                           }`}
                         >
                           {item.name}
-                        </Link>
+                        </LoadingLink>
                       </li>
                     );
                   })}

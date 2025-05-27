@@ -1,6 +1,6 @@
 import Layout from '@/components/layout/Layout';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import Link from 'next/link';
+import LoadingLink from '@/components/ui/loading-link';
 
 export default function Home() {
   return (
@@ -14,7 +14,7 @@ export default function Home() {
         <h2 className="text-2xl font-semibold mb-6">実装完了ツール</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Link href="/tools/color-picker" className="block">
+          <LoadingLink href="/tools/color-picker" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">カラーピッカー</CardTitle>
@@ -28,9 +28,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/json-formatter" className="block">
+          <LoadingLink href="/tools/json-formatter" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">JSON整形・検証</CardTitle>
@@ -44,9 +44,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/html-formatter" className="block">
+          <LoadingLink href="/tools/html-formatter" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">HTML整形</CardTitle>
@@ -60,9 +60,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/encoder-decoder" className="block">
+          <LoadingLink href="/tools/encoder-decoder" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">エンコード/デコード</CardTitle>
@@ -76,9 +76,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/hash-generator" className="block">
+          <LoadingLink href="/tools/hash-generator" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">ハッシュ生成</CardTitle>
@@ -92,9 +92,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/password-generator" className="block">
+          <LoadingLink href="/tools/password-generator" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">パスワード生成</CardTitle>
@@ -108,9 +108,9 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
 
-          <Link href="/tools/image-converter" className="block">
+          <LoadingLink href="/tools/image-converter" className="block">
             <Card className="bg-[#161b22] border-gray-800 hover:bg-[#1c232d] transition-colors">
               <CardHeader>
                 <CardTitle className="text-xl text-white">画像変換</CardTitle>
@@ -124,7 +124,7 @@ export default function Home() {
                 </ul>
               </CardContent>
             </Card>
-          </Link>
+          </LoadingLink>
         </div>
 
         <Card className="bg-[#161b22] border-gray-800 mb-8">
