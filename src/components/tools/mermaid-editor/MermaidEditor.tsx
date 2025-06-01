@@ -134,11 +134,11 @@ export const MermaidEditor: React.FC = () => {
   }, []);
 
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.25, 3));
+    setZoomLevel(prev => Math.min(prev + 0.25, 20));
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.25, 0.25));
+    setZoomLevel(prev => Math.max(prev - 0.25, 0.1));
   };
 
   const handleZoomReset = () => {
@@ -167,8 +167,8 @@ export const MermaidEditor: React.FC = () => {
   const handleWheel = (e: React.WheelEvent) => {
     if (!isFullscreen) return;
     e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setZoomLevel(prev => Math.max(0.25, Math.min(3, prev + delta)));
+    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+    setZoomLevel(prev => Math.max(0.1, Math.min(20, prev + delta)));
   };
 
   return (
