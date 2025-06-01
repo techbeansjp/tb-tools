@@ -13,7 +13,8 @@ const Sidebar = () => {
       { name: 'カラーピッカー', href: '/tools/color-picker' },
       { name: 'JSON整形・検証', href: '/tools/json-formatter' },
       { name: 'エンコード/デコード', href: '/tools/encoder-decoder' },
-      { name: 'HTML整形', href: '/tools/html-formatter' }
+      { name: 'HTML整形', href: '/tools/html-formatter' },
+      { name: 'Mermaidエディタ', href: '/tools/mermaid-editor' }
     ],
     'テキスト処理ツール': [
       { name: 'テキスト変換', href: '#' },
@@ -117,4 +118,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;                                                                                                                                                                                                
+export default Sidebar;                                                                                                                                                                                                                                                                                                                                                                                                
