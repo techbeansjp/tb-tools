@@ -16,7 +16,9 @@ export const MermaidEditor: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [copyButtonText, setCopyButtonText] = useState<string>('エラーをコピー');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   const previewRef = useRef<HTMLDivElement>(null);
+  const fullscreenRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<typeof import('mermaid').default | null>(null);
 
   useEffect(() => {
@@ -98,9 +100,33 @@ export const MermaidEditor: React.FC = () => {
       });
   };
 
+  const handleFullscreen = () => {
+    if (!fullscreenRef.current) return;
+
+    if (!isFullscreen) {
+      fullscreenRef.current.requestFullscreen()
+        .then(() => setIsFullscreen(true))
+        .catch(err => console.error('フルスクリーン表示に失敗しました:', err));
+    } else {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => console.error('フルスクリーン終了に失敗しました:', err));
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
-    <div className="container mx-auto p-4 space-y-4">
-      <Card className="p-6 bg-[#1c2128] border-gray-700">
+    <>
+      <div className="container mx-auto p-4 space-y-4">
+        <Card className="p-6 bg-[#1c2128] border-gray-700">
         <div className="flex flex-col space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -130,9 +156,17 @@ export const MermaidEditor: React.FC = () => {
             <div>
               <div className="flex justify-between items-center h-10">
                 <Label className="text-gray-300">プレビュー</Label>
-                {isLoading && (
-                  <span className="text-sm text-gray-400">レンダリング中...</span>
-                )}
+                <div className="flex items-center gap-2">
+                  {isLoading && (
+                    <span className="text-sm text-gray-400">レンダリング中...</span>
+                  )}
+                  <Button
+                    onClick={handleFullscreen}
+                    className="h-8 px-3 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+                  >
+                    {isFullscreen ? '縮小' : '拡大'}
+                  </Button>
+                </div>
               </div>
               <div 
                 ref={previewRef}
@@ -159,7 +193,40 @@ export const MermaidEditor: React.FC = () => {
             </div>
           )}
         </div>
-      </Card>
-    </div>
+        </Card>
+      </div>
+
+      {/* Fullscreen Modal */}
+      <div
+        ref={fullscreenRef}
+        className={`fixed inset-0 bg-[#0d1117] z-50 ${isFullscreen ? 'block' : 'hidden'}`}
+      >
+        <div className="h-full flex flex-col">
+          <div className="flex justify-between items-center p-4 border-b border-gray-700">
+            <h2 className="text-xl font-bold text-gray-300">Mermaidプレビュー</h2>
+            <Button
+              onClick={handleFullscreen}
+              className="h-8 px-3 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+            >
+              閉じる
+            </Button>
+          </div>
+          <div className="flex-1 p-4 overflow-auto flex items-center justify-center">
+            <div 
+              ref={(el) => {
+                if (el && previewRef.current && isFullscreen) {
+                  el.innerHTML = previewRef.current.innerHTML;
+                }
+              }}
+              className="w-full h-full flex items-center justify-center"
+            >
+              {!previewRef.current?.innerHTML && (
+                <span className="text-gray-500">プレビューがありません</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
