@@ -17,8 +17,13 @@ export const MermaidEditor: React.FC = () => {
   const [copyButtonText, setCopyButtonText] = useState<string>('エラーをコピー');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [scrollPosition, setScrollPosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const previewRef = useRef<HTMLDivElement>(null);
   const fullscreenRef = useRef<HTMLDivElement>(null);
+  const fullscreenContentRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<typeof import('mermaid').default | null>(null);
 
   useEffect(() => {
@@ -116,12 +121,55 @@ export const MermaidEditor: React.FC = () => {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isNowFullscreen = !!document.fullscreenElement;
+      setIsFullscreen(isNowFullscreen);
+      if (!isNowFullscreen) {
+        setZoomLevel(1);
+        setScrollPosition({ x: 0, y: 0 });
+      }
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.25, 0.25));
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+    setScrollPosition({ x: 0, y: 0 });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isFullscreen) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - scrollPosition.x, y: e.clientY - scrollPosition.y });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !isFullscreen) return;
+    setScrollPosition({
+      x: e.clientX - dragStart.x,
+      y: e.clientY - dragStart.y
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (!isFullscreen) return;
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    setZoomLevel(prev => Math.max(0.25, Math.min(3, prev + delta)));
+  };
 
   return (
     <>
@@ -204,25 +252,68 @@ export const MermaidEditor: React.FC = () => {
         <div className="h-full flex flex-col">
           <div className="flex justify-between items-center p-4 border-b border-gray-700">
             <h2 className="text-xl font-bold text-gray-300">Mermaidプレビュー</h2>
-            <Button
-              onClick={handleFullscreen}
-              className="h-8 px-3 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
-            >
-              閉じる
-            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 bg-gray-800 rounded-md p-1">
+                <Button
+                  onClick={handleZoomOut}
+                  className="h-6 w-6 p-0 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+                >
+                  -
+                </Button>
+                <span className="text-xs text-gray-300 px-2 min-w-[50px] text-center">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+                <Button
+                  onClick={handleZoomIn}
+                  className="h-6 w-6 p-0 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+                >
+                  +
+                </Button>
+                <Button
+                  onClick={handleZoomReset}
+                  className="h-6 px-2 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+                >
+                  リセット
+                </Button>
+              </div>
+              <Button
+                onClick={handleFullscreen}
+                className="h-8 px-3 text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-600"
+              >
+                閉じる
+              </Button>
+            </div>
           </div>
-          <div className="flex-1 p-4 overflow-auto flex items-center justify-center">
+          <div 
+            className="flex-1 overflow-hidden relative"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          >
             <div 
-              ref={(el) => {
-                if (el && previewRef.current && isFullscreen) {
-                  el.innerHTML = previewRef.current.innerHTML;
-                }
+              ref={fullscreenContentRef}
+              className="absolute inset-0 flex items-center justify-center"
+              style={{
+                transform: `translate(${scrollPosition.x}px, ${scrollPosition.y}px) scale(${zoomLevel})`,
+                transformOrigin: 'center center',
+                transition: isDragging ? 'none' : 'transform 0.1s ease-out'
               }}
-              className="w-full h-full flex items-center justify-center"
             >
-              {!previewRef.current?.innerHTML && (
-                <span className="text-gray-500">プレビューがありません</span>
-              )}
+              <div 
+                ref={(el) => {
+                  if (el && previewRef.current && isFullscreen) {
+                    el.innerHTML = previewRef.current.innerHTML;
+                  }
+                }}
+                className="flex items-center justify-center"
+              >
+                {!previewRef.current?.innerHTML && (
+                  <span className="text-gray-500">プレビューがありません</span>
+                )}
+              </div>
             </div>
           </div>
         </div>
