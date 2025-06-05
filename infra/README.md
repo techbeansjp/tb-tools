@@ -21,7 +21,7 @@ nano .env #設定値を修正
 ```
 各設定値は以下のとおりです
 - AWS_REGION
-  - S3バケットの配置先の指定になります。大体の場合はそのまま`ap-bnortheast-1`でいいはずです。
+  - S3バケットの配置先の指定になります。大体の場合はそのまま`ap-northeast-1`でいいはずです。
 - AWS_ACCESS_KEY_ID
   - デプロイ先のAWSアカウントのAWSのアクセキー(大体は`AKIA〜`の形式)
 - AWS_SECRET_ACCESS_KEY=your_secret_key
