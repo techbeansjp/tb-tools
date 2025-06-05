@@ -12,10 +12,9 @@
 - 適切なAWS認証情報
 
 ## 運用手順
-
+すべて当ディレクトリ`infra`の中での作業です。
 ### .envの準備
 ```bash
-
 cp env_example .env #サンプルをコピー
 nano .env #設定値を修正
 ```
