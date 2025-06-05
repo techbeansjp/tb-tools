@@ -52,7 +52,7 @@ const Sidebar = () => {
   }, [pathname, menuItems]);
 
   return (
-    <aside className="w-64 bg-[#161b22] border-r border-gray-800 min-h-[calc(100vh-64px)]">
+    <aside className="w-64 bg-[#161b22] border-r border-gray-800 h-full overflow-y-auto">
       <nav className="p-4">
         <ul className="space-y-2">
           <li>
