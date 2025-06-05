@@ -17,7 +17,6 @@ interface ColorWheelProps {
 const ColorWheel = ({ onColorChange, value }: ColorWheelProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [indicator, setIndicator] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,7 +61,6 @@ const ColorWheel = ({ onColorChange, value }: ColorWheelProps) => {
     ctx.arc(x, y, 5, 0, 2 * Math.PI);
     ctx.fillStyle = '#000';
     ctx.fill();
-    setIndicator({ x, y });
   }, [value]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {

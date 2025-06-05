@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { hslToHex, hslToRgb } from '@/lib/colorUtils';
 
 interface ColorSquareProps {
@@ -52,7 +52,7 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
     ctx.stroke();
   }, [hue, saturation, lightness]);
 
-  const getRelativeCoords = (clientX: number, clientY: number) => {
+  const getRelativeCoords = useCallback((clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { s: saturation, l: lightness };
     const rect = canvas.getBoundingClientRect();
@@ -61,7 +61,7 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
     const s = (x / canvas.width) * 100;
     const l = 100 - (y / canvas.height) * 100;
     return { s, l };
-  };
+  }, [saturation, lightness]);
 
   useEffect(() => {
     if (!isDragging) return;
@@ -78,7 +78,7 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleUp);
     };
-  }, [isDragging, hue, onChange]);
+  }, [isDragging, hue, onChange, getRelativeCoords]);
   
   useEffect(() => {
     if (!isDragging) return;
@@ -102,7 +102,7 @@ const ColorSquare = ({ hue, saturation, lightness, onChange }: ColorSquareProps)
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [isDragging, hue, onChange]);
+  }, [isDragging, hue, onChange, getRelativeCoords]);
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsDragging(true);
