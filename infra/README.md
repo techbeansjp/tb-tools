@@ -2,6 +2,9 @@
 
 ## 概要
 このディレクトリには、AWS上で動作するインフラストラクチャのTerraform設定が含まれています。
+### 概要構成図
+![概要構成図](images/overview.png)
+
 
 ## 前提条件
 - Docker
@@ -23,6 +26,23 @@ nano .env #設定値を修正
   - デプロイ先のAWSアカウントのAWSのアクセキー(大体は`AKIA〜`の形式)
 - AWS_SECRET_ACCESS_KEY=your_secret_key
   - デプロイ先のAWSアカウントのAWSのアクセスシークレット(アクセスキーとセットで発行されているかと思います。)
+### terraform.tfvarsの準備
+```bash
+cd terraform
+cp terraform.example.tfvars terraform.tfvars #サンプルをコピー
+nano terraform.tfvars #設定値を修正
+```
+- domain_name
+  - サイトを公開するFQDN名
+- acm_certificate_arn
+  - アタッチするACM証明書のARN
+    - `us-east-1`に置いてあるワイルドカード証明書のARNになります。
+- s3_bucket_name
+  - サイトのコンテンツを置くS3バケット名
+- region
+  - S3バケットの配置先リージョン
+- route53_zone_name
+  - 公開するドメイン名が属しているRoute53のホストゾーン名
 
 
 ### インフラストラクチャの初期化
