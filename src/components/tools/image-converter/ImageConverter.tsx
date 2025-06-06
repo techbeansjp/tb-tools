@@ -83,7 +83,8 @@ export const ImageConverter: React.FC = () => {
         setImagePreview('');
       };
       img.src = base64Data;
-    } catch {
+    } catch (error) {
+      console.error('Base64 processing error:', error);
       setError('Base64データの処理中にエラーが発生しました。');
       setImagePreview('');
     }
@@ -125,7 +126,8 @@ export const ImageConverter: React.FC = () => {
       setTimeout(() => {
         setDownloadButtonText('ダウンロード');
       }, 2000);
-    } catch {
+    } catch (error) {
+      console.error('Image download error:', error);
       setError('画像のダウンロードに失敗しました。');
     }
   };

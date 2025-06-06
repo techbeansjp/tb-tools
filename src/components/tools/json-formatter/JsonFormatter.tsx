@@ -43,10 +43,12 @@ export const JsonFormatter: React.FC = () => {
         ? sortObjectKeys(parsed) 
         : parsed;
 
+      const indentSize = formatOptions.useTabs ? 1 : formatOptions.indentSize;
+      
       const formatted = JSON.stringify(
         sortedData,
         null,
-        formatOptions.compact ? 0 : formatOptions.indentSize
+        formatOptions.compact ? 0 : indentSize
       );
       
       setFormattedJson(formatted);
@@ -214,4 +216,4 @@ export const JsonFormatter: React.FC = () => {
       </Card>
     </div>
   );
-};              
+};                                                        
