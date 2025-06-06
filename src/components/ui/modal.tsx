@@ -23,12 +23,13 @@ const Modal = React.forwardRef<
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape)
+      const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
-    }
 
-    return () => {
-      document.removeEventListener('keydown', handleEscape)
-      document.body.style.overflow = 'unset'
+      return () => {
+        document.removeEventListener('keydown', handleEscape)
+        document.body.style.overflow = originalOverflow
+      }
     }
   }, [isOpen, onClose])
 
