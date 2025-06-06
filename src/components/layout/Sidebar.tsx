@@ -3,10 +3,13 @@
 import Link from 'next/link';
 import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
+import { ComingSoonModal } from '@/components/ui/coming-soon-modal';
 
 const Sidebar = () => {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState<string>('');
 
   const menuItems = useMemo(() => ({
     '開発支援ツール': [
@@ -51,70 +54,86 @@ const Sidebar = () => {
     }
   }, [pathname, menuItems]);
 
+  const handleItemClick = (e: React.MouseEvent, item: { name: string; href: string }) => {
+    if (item.href === '#') {
+      e.preventDefault();
+      setSelectedFeature(item.name);
+      setShowComingSoon(true);
+    }
+  };
+
   return (
-    <aside className="w-64 bg-[#161b22] border-r border-gray-800 h-full overflow-y-auto">
-      <nav className="p-4">
-        <ul className="space-y-2">
-          <li>
-            <Link
-              href="/"
-              className="block px-4 py-2 text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md"
-            >
-              ダッシュボード
-            </Link>
-          </li>
-          {Object.entries(menuItems).map(([category, items]) => (
-            <li key={category}>
-              <button
-                className="w-full px-4 py-2 text-left text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md flex items-center justify-between"
-                onClick={() => setActiveMenu(activeMenu === category ? null : category)}
-                aria-expanded={activeMenu === category}
-                aria-controls={`menu-${category}`}
+    <>
+      <aside className="w-64 bg-[#161b22] border-r border-gray-800 h-full overflow-y-auto">
+        <nav className="p-4">
+          <ul className="space-y-2">
+            <li>
+              <Link
+                href="/"
+                className="block px-4 py-2 text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md"
               >
-                <span>{category}</span>
-                <svg
-                  className={`h-4 w-4 transition-transform ${
-                    activeMenu === category ? 'rotate-180' : ''
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {activeMenu === category && (
-                <ul id={`menu-${category}`} className="mt-2 ml-4 space-y-1">
-                  {items.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <li key={item.name}>
-                        <Link
-                          href={item.href}
-                          className={`block px-4 py-2 text-sm rounded-md ${
-                            isActive
-                              ? 'bg-[#2d333b] text-white font-medium'
-                              : 'text-gray-400 hover:bg-[#21262d] hover:text-white'
-                          }`}
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
+                ダッシュボード
+              </Link>
             </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+            {Object.entries(menuItems).map(([category, items]) => (
+              <li key={category}>
+                <button
+                  className="w-full px-4 py-2 text-left text-gray-300 hover:bg-[#21262d] hover:text-white rounded-md flex items-center justify-between"
+                  onClick={() => setActiveMenu(activeMenu === category ? null : category)}
+                  aria-expanded={activeMenu === category}
+                  aria-controls={`menu-${category}`}
+                >
+                  <span>{category}</span>
+                  <svg
+                    className={`h-4 w-4 transition-transform ${
+                      activeMenu === category ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {activeMenu === category && (
+                  <ul id={`menu-${category}`} className="mt-2 ml-4 space-y-1">
+                    {items.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            href={item.href}
+                            onClick={(e) => handleItemClick(e, item)}
+                            className={`block px-4 py-2 text-sm rounded-md ${
+                              isActive
+                                ? 'bg-[#2d333b] text-white font-medium'
+                                : 'text-gray-400 hover:bg-[#21262d] hover:text-white'
+                            }`}
+                          >
+                            {item.name}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+      <ComingSoonModal
+        isOpen={showComingSoon}
+        onClose={() => setShowComingSoon(false)}
+        featureName={selectedFeature}
+      />
+    </>
   );
 };
 
