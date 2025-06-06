@@ -115,7 +115,8 @@ export const TimezoneConverter: React.FC = () => {
       const second = parts.find(p => p.type === 'second')?.value;
       
       return `${year}年${month}月${day}日 ${hour}:${minute}:${second}`;
-    } catch {
+    } catch (error) {
+      console.error('Timezone formatting error:', error);
       return '無効なタイムゾーン';
     }
   }, []);
@@ -138,7 +139,8 @@ export const TimezoneConverter: React.FC = () => {
       const utcEquivalent = new Date(tempDate.getTime() + offset);
       
       return formatDateTime(utcEquivalent, targetTimezone);
-    } catch {
+    } catch (error) {
+      console.error('Custom time conversion error:', error);
       return '無効な日時';
     }
   }, [customDateTime, sourceTimezone, targetTimezone, formatDateTime]);
