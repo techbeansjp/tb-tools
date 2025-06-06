@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Encoder, Byte } from '@nuintun/qrcode';
-
-interface QRGeneratorProps {}
 
 // QRコード生成用の設定
 interface QRCodeConfig {
@@ -17,7 +16,7 @@ interface QRCodeConfig {
   errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
 }
 
-export const QrGenerator: React.FC<QRGeneratorProps> = () => {
+export const QrGenerator: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
   const [qrSize, setQrSize] = useState<string>('256');
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<'L' | 'M' | 'Q' | 'H'>('M');
@@ -207,9 +206,11 @@ export const QrGenerator: React.FC<QRGeneratorProps> = () => {
             <div className="space-y-2">
               <Label className="text-gray-300">生成されたQRコード</Label>
               <div className="flex justify-center p-6 bg-[#0d1117] border border-gray-700 rounded-lg">
-                <img 
+                <Image 
                   src={qrDataUrl} 
                   alt="Generated QR Code" 
+                  width={parseInt(qrSize)}
+                  height={parseInt(qrSize)}
                   className="border border-gray-600 rounded"
                   style={{ maxWidth: '100%', height: 'auto' }}
                 />

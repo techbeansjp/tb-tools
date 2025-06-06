@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -115,26 +115,40 @@ export const EncoderDecoder: React.FC = () => {
     }
   ];
 
-  const handleProcess = () => {
+  const handleProcess = useCallback(() => {
+    setError(null);
     try {
-      setError(null);
-      const option = encodingOptions.find(opt => opt.id === encodingType);
-      if (!option) return;
-
-      const result = mode === 'encode' 
-        ? option.encode(inputText)
-        : option.decode(inputText);
-      
-      setOutputText(result);
-    } catch (e) {
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError('処理中にエラーが発生しました');
+      let result = '';
+      switch (encodingType) {
+        case 'base64':
+          result = mode === 'encode'
+            ? btoa(unescape(encodeURIComponent(inputText)))
+            : decodeURIComponent(escape(atob(inputText)));
+          break;
+        case 'url':
+          result = mode === 'encode'
+            ? encodeURIComponent(inputText)
+            : decodeURIComponent(inputText);
+          break;
+        case 'html':
+          result = mode === 'encode'
+            ? inputText.replace(/[&<>'"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[c] || c))
+            : inputText.replace(/&amp;|&lt;|&gt;|&#39;|&quot;/g, (c) => ({ '&amp;': '&', '&lt;': '<', '&gt;': '>', '&#39;': "'", '&quot;': '"' }[c] || c));
+          break;
+        case 'json':
+          result = mode === 'encode'
+            ? JSON.stringify(JSON.parse(inputText))
+            : JSON.stringify(JSON.parse(inputText), null, 2);
+          break;
+        default:
+          result = inputText;
       }
+      setOutputText(result);
+    } catch {
+      setError('変換中にエラーが発生しました。入力内容を確認してください。');
       setOutputText('');
     }
-  };
+  }, [inputText, encodingType, mode]);
 
   const handleCopy = () => {
     if (!navigator.clipboard) {
@@ -149,8 +163,7 @@ export const EncoderDecoder: React.FC = () => {
           setCopyButtonText('コピー');
         }, 2000);
       })
-      .catch(err => {
-        console.error('クリップボードへのコピーに失敗しました:', err);
+      .catch(() => {
         setError('クリップボードへのコピーに失敗しました。ブラウザの設定を確認してください。');
       });
   };
@@ -163,13 +176,8 @@ export const EncoderDecoder: React.FC = () => {
 
   // 入力が変更されたら自動的に処理を実行
   useEffect(() => {
-    if (inputText) {
-      handleProcess();
-    } else {
-      setOutputText('');
-      setError(null);
-    }
-  }, [inputText, encodingType, mode]);
+    handleProcess();
+  }, [inputText, encodingType, mode, handleProcess]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">

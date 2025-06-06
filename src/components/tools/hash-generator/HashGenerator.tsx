@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -31,8 +31,8 @@ async function md5(message: string): Promise<string> {
     K[i] = Math.floor(Math.abs(Math.sin(i + 1)) * 2**32);
   }
   
-  let messageLen = msgBuffer.length;
-  let padLen = (messageLen % 64 < 56) ? (56 - messageLen % 64) : (120 - messageLen % 64);
+  const messageLen = msgBuffer.length;
+  const padLen = (messageLen % 64 < 56) ? (56 - messageLen % 64) : (120 - messageLen % 64);
   
   const paddedMsg = new Uint8Array(messageLen + padLen + 8);
   paddedMsg.set(msgBuffer);
@@ -140,30 +140,30 @@ export const HashGenerator: React.FC = () => {
     { id: 'sha-512', name: 'SHA-512' }
   ];
 
-  const handleProcess = async () => {
+  const handleProcess = useCallback(async () => {
     if (!inputText) {
       setOutputText('');
       setError(null);
       return;
     }
-    
+
+    setIsProcessing(true);
+    setError(null);
+
     try {
-      setIsProcessing(true);
-      setError(null);
-      
       const result = await calculateHash(inputText, algorithm);
       setOutputText(result);
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message);
       } else {
-        setError('ハッシュ計算中にエラーが発生しました');
+        setError('ハッシュ生成中にエラーが発生しました');
       }
       setOutputText('');
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [inputText, algorithm]);
 
   const handleCopy = () => {
     if (!navigator.clipboard) {
@@ -186,7 +186,7 @@ export const HashGenerator: React.FC = () => {
 
   useEffect(() => {
     handleProcess();
-  }, [inputText, algorithm]);
+  }, [inputText, algorithm, handleProcess]);
 
   return (
     <div className="container mx-auto p-4 space-y-4">
