@@ -6,9 +6,48 @@ export default function Home() {
   return (
     <Layout>
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-4">TechBeans Tools</h1>
+        <h1 className="text-3xl font-bold mb-4">techbeans Tools</h1>
         <p className="text-gray-400">便利な開発ツールを集約したWebアプリケーション</p>
       </div>
+
+      <Card className="bg-[#161b22] border-gray-800 mb-8 max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-xl text-white">オープンソースプロジェクト</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <p className="text-gray-300 mb-2">
+                このプロジェクトはオープンソースで開発されています。
+                <Link 
+                  href="https://github.com/techbeansjp/tb-tools" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 ml-2"
+                >
+                  GitHub リポジトリ
+                </Link>
+              </p>
+            </div>
+            
+            <div className="border-t border-gray-700 pt-4">
+              <h4 className="text-lg font-medium text-white mb-3">コントリビューション</h4>
+              <ul className="list-disc list-inside text-gray-300 space-y-2">
+                <li>欲しい機能がある場合は、<Link href="https://github.com/techbeansjp/tb-tools/issues" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">Issue</Link> でリクエストできます</li>
+                <li>リクエストに対して実装してプルリクエストを送ることも歓迎します（承認権限はtechbeans側にあります）</li>
+                <li>フォークも自由に行えます</li>
+              </ul>
+            </div>
+
+            <div className="border-t border-gray-700 pt-4">
+              <h4 className="text-lg font-medium text-white mb-3">ライセンス</h4>
+              <p className="text-gray-300">
+                MIT License - 商用利用、修正、配布、私的使用が可能です。
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="max-w-4xl mx-auto">
         <h2 className="text-2xl font-semibold mb-6">実装完了ツール</h2>
@@ -156,15 +195,15 @@ export default function Home() {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">7</div>
+                <div className="text-2xl font-bold text-green-400">11</div>
                 <div className="text-sm text-gray-400">実装完了ツール</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-yellow-400">3</div>
+                <div className="text-2xl font-bold text-yellow-400">3+</div>
                 <div className="text-sm text-gray-400">実装予定ツール</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">70%</div>
+                <div className="text-2xl font-bold text-blue-400">80%</div>
                 <div className="text-sm text-gray-400">完成度</div>
               </div>
               <div className="text-center">
