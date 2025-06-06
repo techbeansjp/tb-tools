@@ -42,14 +42,20 @@ export const JsonFormatter: React.FC = () => {
       const sortedData = formatOptions.sortKeys 
         ? sortObjectKeys(parsed) 
         : parsed;
-      
-      const indentChar = formatOptions.useTabs ? '\t' : ' ';
-      const indentSize = formatOptions.useTabs ? 1 : formatOptions.indentSize;
+
+      let indentValue: string | number;
+      if (formatOptions.compact) {
+        indentValue = 0;
+      } else if (formatOptions.useTabs) {
+        indentValue = '\t';
+      } else {
+        indentValue = formatOptions.indentSize;
+      }
       
       const formatted = JSON.stringify(
         sortedData,
         null,
-        formatOptions.compact ? 0 : indentSize
+        indentValue
       );
       
       setFormattedJson(formatted);
@@ -66,7 +72,7 @@ export const JsonFormatter: React.FC = () => {
     }
   };
   
-  const sortObjectKeys = (obj: any): any => {
+  const sortObjectKeys = (obj: unknown): unknown => {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -75,10 +81,10 @@ export const JsonFormatter: React.FC = () => {
       return obj.map(sortObjectKeys);
     }
     
-    return Object.keys(obj)
+    return Object.keys(obj as Record<string, unknown>)
       .sort()
-      .reduce<Record<string, any>>((result, key) => {
-        result[key] = sortObjectKeys(obj[key]);
+      .reduce<Record<string, unknown>>((result, key) => {
+        result[key] = sortObjectKeys((obj as Record<string, unknown>)[key]);
         return result;
       }, {});
   };
@@ -217,4 +223,4 @@ export const JsonFormatter: React.FC = () => {
       </Card>
     </div>
   );
-};              
+};                                                                                    

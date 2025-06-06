@@ -26,35 +26,22 @@ export const MermaidEditor: React.FC = () => {
   const fullscreenContentRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<typeof import('mermaid').default | null>(null);
 
-  useEffect(() => {
-    const loadMermaid = async () => {
-      try {
-        const mermaid = await import('mermaid');
-        mermaid.default.initialize({
-          startOnLoad: false,
-          theme: 'dark',
-          themeVariables: {
-            primaryColor: '#3b82f6',
-            primaryTextColor: '#e5e7eb',
-            primaryBorderColor: '#374151',
-            lineColor: '#6b7280',
-            secondaryColor: '#1f2937',
-            tertiaryColor: '#111827'
-          }
-        });
-        mermaidRef.current = mermaid.default;
-        renderDiagram();
-      } catch (err) {
-        console.error('Failed to load Mermaid:', err);
-        setError('Mermaidライブラリの読み込みに失敗しました。');
-      }
-    };
-
-    loadMermaid();
+  const loadMermaid = useCallback(async () => {
+    if (!mermaidRef.current) {
+      const mermaid = await import('mermaid');
+      mermaidRef.current = mermaid.default;
+      await mermaidRef.current.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        securityLevel: 'loose',
+      });
+    }
+    return mermaidRef.current;
   }, []);
 
   const renderDiagram = useCallback(async () => {
-    if (!mermaidRef.current || !previewRef.current || !inputCode.trim()) {
+    if (!inputCode) {
+      setError(null);
       return;
     }
 
@@ -62,23 +49,25 @@ export const MermaidEditor: React.FC = () => {
     setError(null);
 
     try {
-      const parseResult = await mermaidRef.current.parse(inputCode);
-      if (parseResult) {
-        const { svg } = await mermaidRef.current.render('mermaid-preview', inputCode);
-        if (previewRef.current) {
-          previewRef.current.innerHTML = svg;
-        }
+      const mermaid = await loadMermaid();
+      const { svg } = await mermaid.render('mermaid-diagram', inputCode);
+      if (previewRef.current) {
+        previewRef.current.innerHTML = svg;
       }
-    } catch (err: unknown) {
-      console.error('Mermaid render error:', err);
-      setError(err instanceof Error ? err.message : 'Mermaid構文エラーが発生しました。');
+      setError(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('ダイアグラムのレンダリング中にエラーが発生しました');
+      }
       if (previewRef.current) {
         previewRef.current.innerHTML = '';
       }
     } finally {
       setIsLoading(false);
     }
-  }, [inputCode, mermaidRef]);
+  }, [inputCode, loadMermaid]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -86,7 +75,7 @@ export const MermaidEditor: React.FC = () => {
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [inputCode]);
+  }, [inputCode, renderDiagram]);
 
   const handleCopyError = () => {
     if (!navigator.clipboard || !error) {

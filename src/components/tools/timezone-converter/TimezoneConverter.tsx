@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -117,6 +116,7 @@ export const TimezoneConverter: React.FC = () => {
       
       return `${year}年${month}月${day}日 ${hour}:${minute}:${second}`;
     } catch (error) {
+      console.error('Timezone formatting error:', error);
       return '無効なタイムゾーン';
     }
   }, []);
@@ -140,6 +140,7 @@ export const TimezoneConverter: React.FC = () => {
       
       return formatDateTime(utcEquivalent, targetTimezone);
     } catch (error) {
+      console.error('Custom time conversion error:', error);
       return '無効な日時';
     }
   }, [customDateTime, sourceTimezone, targetTimezone, formatDateTime]);

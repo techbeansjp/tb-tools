@@ -5,9 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
-interface ImageConverterProps {}
-
-export const ImageConverter: React.FC<ImageConverterProps> = () => {
+export const ImageConverter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'imageToBase64' | 'base64ToImage'>('imageToBase64');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [base64Output, setBase64Output] = useState<string>('');
@@ -75,7 +73,7 @@ export const ImageConverter: React.FC<ImageConverterProps> = () => {
       }
 
       // 画像として表示できるかテスト
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         setImagePreview(base64Data);
         setError(null);
@@ -85,7 +83,8 @@ export const ImageConverter: React.FC<ImageConverterProps> = () => {
         setImagePreview('');
       };
       img.src = base64Data;
-    } catch (e) {
+    } catch (error) {
+      console.error('Base64 processing error:', error);
       setError('Base64データの処理中にエラーが発生しました。');
       setImagePreview('');
     }
@@ -127,7 +126,8 @@ export const ImageConverter: React.FC<ImageConverterProps> = () => {
       setTimeout(() => {
         setDownloadButtonText('ダウンロード');
       }, 2000);
-    } catch (e) {
+    } catch (error) {
+      console.error('Image download error:', error);
       setError('画像のダウンロードに失敗しました。');
     }
   };
@@ -195,6 +195,7 @@ export const ImageConverter: React.FC<ImageConverterProps> = () => {
                 <div>
                   <Label className="text-gray-300 mb-2 block">プレビュー</Label>
                   <div className="bg-[#0d1117] border border-gray-700 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imagePreview}
                       alt="プレビュー"
@@ -243,6 +244,7 @@ export const ImageConverter: React.FC<ImageConverterProps> = () => {
                 <div>
                   <Label className="text-gray-300 mb-2 block">変換された画像</Label>
                   <div className="bg-[#0d1117] border border-gray-700 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={imagePreview}
                       alt="変換された画像"
