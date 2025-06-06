@@ -2,7 +2,7 @@ import Layout from '@/components/layout/Layout';
 import { QrGenerator } from '@/components/tools/qr-generator/QrGenerator';
 
 export const metadata = {
-  title: 'QRコード生成ツール | TechBeans Tools',
+  title: 'QRコード生成ツール | techbeans Tools',
   description: 'URLやテキストからQRコードを生成し、PNG形式でダウンロードできるツールです。複数のサイズに対応しています。',
 };
 

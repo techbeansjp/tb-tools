@@ -2,7 +2,7 @@ import Layout from '@/components/layout/Layout';
 import { TimestampConverter } from '@/components/tools/timestamp-converter/TimestampConverter';
 
 export const metadata = {
-  title: 'タイムスタンプ変換ツール | TechBeans Tools',
+  title: 'タイムスタンプ変換ツール | techbeans Tools',
   description: 'タイムスタンプと日時の相互変換ができるツールです。JST（日本標準時）に対応しています。',
 };
 
