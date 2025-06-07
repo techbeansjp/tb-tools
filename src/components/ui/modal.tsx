@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from "react"
+import * as ReactDOM from "react-dom"
 import { cn } from "@/lib/utils"
 
 interface ModalProps {
@@ -14,6 +15,13 @@ const Modal = React.forwardRef<
   HTMLDivElement,
   ModalProps
 >(({ isOpen, onClose, children, className }, ref) => {
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
+
   React.useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -33,11 +41,11 @@ const Modal = React.forwardRef<
     }
   }, [isOpen, onClose])
 
-  if (!isOpen) return null
+  if (!mounted || !isOpen) return null
 
-  return (
+  return ReactDOM.createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center"
+      className="fixed inset-0 flex items-center justify-center"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/50" />
@@ -51,7 +59,8 @@ const Modal = React.forwardRef<
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 })
 Modal.displayName = "Modal"
