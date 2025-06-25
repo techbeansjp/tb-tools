@@ -37,7 +37,7 @@ const Sidebar = () => {
       { name: 'ハッシュ生成', href: '/tools/hash-generator' }
     ],
     'ネットワークツール': [
-      { name: 'IP確認', href: '#' },
+      { name: 'IP確認', href: '/tools/ip-viewer' },
       { name: 'クエリパラメータ解析', href: '#' }
     ]
   }), []);
