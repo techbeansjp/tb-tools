@@ -22,7 +22,7 @@
     "lucide-react": "^0.513.0",
     "mermaid": "^11.7.0",
     "monaco-editor": "^0.52.2",
-    "next": "15.3.4",
+    "next": "15.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^3.3.1"
